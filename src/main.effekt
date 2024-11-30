@@ -23,10 +23,12 @@ def main() = {
     playGame(board)
   } with Reveal { (row, col) =>
     println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    resume(revealCell(board, row, col))
-  } with GameOver {
-    println("Game Over! You hit a mine.")
-  } with Flag { (row, col) =>
+    resume(
+      try{ revealCell(board, row, col) }
+      with GameOver { println("Game Over! You hit a mine."); board }
+    )
+  }
+  with Flag { (row, col) =>
     println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
     resume(flagCell(board, row, col))
   }
@@ -37,7 +39,7 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   Board(grid, rows, cols, mines)
 }
 
-def playGame(board: Board): Unit / {Flag, Reveal, GameOver} = {
+def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
   while (true) {
@@ -53,7 +55,7 @@ def playGame(board: Board): Unit / {Flag, Reveal, GameOver} = {
   }
 }
 
-def revealCell(board: Board, row: Int, col: Int): Board / {Reveal, GameOver} = {
+def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
   with on[OutOfBounds].panic
   val cell = board.grid.get(row).get(col)
   cell match {
@@ -68,7 +70,7 @@ def revealCell(board: Board, row: Int, col: Int): Board / {Reveal, GameOver} = {
   }
 }
 
-def flagCell(board: Board, row: Int, col: Int): Board / {Flag} = {
+def flagCell(board: Board, row: Int, col: Int): Board / {} = {
   with on[OutOfBounds].panic
   val cell = board.grid.get(row).get(col)
   cell match {
@@ -110,7 +112,7 @@ def neighbors(row: Int, col: Int, rows: Int, cols: Int): List[(Int, Int)] = {
   list.reverse
 }
 
-def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver, Reveal} = {
+def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver} = {
   neighbors(row, col, board.rows, board.cols).foldLeft(board) {
     (b, coord) => revealCell(b, coord.first, coord.second)
   }
@@ -118,16 +120,24 @@ def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver, Re
 
 def printBoard(board: Board): Unit = {
   var str = ""
+  var counter = 0
+  str = str ++ "*|"
+  each(0, board.cols) {n => str = str ++ show(n) ++ "|"}
+  str = str ++ "\n"
   foreach(board.grid) {row =>
+    str = str ++ show(counter) ++ "|"
+    counter = counter + 1
     foreach(row) {elem =>
       str = str ++ (elem match {
         case Hidden(_, true)       => "F"
-        case Hidden(_, false)      => "."
+        case Hidden(_, false)      => "◼"
         case Revealed(_, count) and (count > 0) => show(count)
         case Revealed(_, _) => " "
-      })
+      }) ++ "|"
     }
+    str = str ++ "\n"
   }
+  println(str)
 }
 
 def askUser(prompt: String): String = {
