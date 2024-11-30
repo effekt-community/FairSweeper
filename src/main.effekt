@@ -5,24 +5,20 @@ import io/console
 
 // def main(): Unit = println(helloWorld())
 
-// Define custom effects for the game logic
 effect Reveal(row: Int, col: Int): Board
-effect GameOver(): Unit
+effect GameOver(): Board
 effect Flag(row: Int, col: Int): Board
 
 type Cell {
-  Hidden(hasMine: Bool, isFlagged: Bool) // Added `isFlagged` to track flagged cells
+  Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(isMine: Bool, adjacentMines: Int)
 }
 
-// Board representation
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
 def main() = {
-  // Initialize the board with 10x10 size and 10 mines
   val board = initializeBoard(10, 10, 10)
 
-  // Play the game using handlers
   try {
     playGame(board)
   } with Reveal { (row, col) =>
@@ -36,21 +32,20 @@ def main() = {
   }
 }
 
-// Initialize the Minesweeper board
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   val grid = array(rows, array(cols, Hidden(false, false)))
   Board(grid, rows, cols, mines)
 }
 
-// Main game loop
 def playGame(board: Board): Unit / {Flag, Reveal, GameOver} = {
+  with on[WrongFormat].panic
   var board = board
   while (true) {
     printBoard(board)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
-    board = input.split(" ").toList() match {
-      case ("r", x, y, _)  => do Reveal(x.toInt, y.toInt)
-      case ("f", x, y, _) => do Flag(x.toInt, y.toInt)
+    board = input.split(" ") match {
+      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal(x.toInt, y.toInt)
+      case Cons("f", Cons(x, Cons(y, _))) => do Flag(x.toInt, y.toInt)
       case _ =>
         println("Invalid input. Try again.")
         board
@@ -58,74 +53,80 @@ def playGame(board: Board): Unit / {Flag, Reveal, GameOver} = {
   }
 }
 
-// Reveal a cell
 def revealCell(board: Board, row: Int, col: Int): Board / {Reveal, GameOver} = {
+  with on[OutOfBounds].panic
   val cell = board.grid.get(row).get(col)
   cell match {
-    case Hidden(hasMine) =>
+    case Hidden(hasMine, _) =>
       if (hasMine) do GameOver()
       else {
         val adjMines = countAdjacentMines(board, row, col)
-        val newGrid = board.grid.set(row, board.grid.get(row).set(col, Revealed(false, adjMines)))
-        val newBoard = board.copy(newGrid)
-        if (adjMines == 0) revealAdjacentCells(newBoard, row, col) else newBoard
+        board.grid.get(row).set(col, Revealed(false, adjMines))
+        if (adjMines == 0) revealAdjacentCells(board, row, col) else board
       }
-    case _ => board // Cell already revealed or flagged
+    case _ => board
   }
 }
 
 def flagCell(board: Board, row: Int, col: Int): Board / {Flag} = {
+  with on[OutOfBounds].panic
   val cell = board.grid.get(row).get(col)
   cell match {
     case Hidden(hasMine, isFlagged) =>
-      val newCell = Hidden(hasMine, not(isFlagged)) // Toggle the flag
-      val newGrid = board.grid.set(row, board.grid.get(row).set(col, newCell))
-      board.copy(newGrid)
+      val newCell = Hidden(hasMine, not(isFlagged))
+      board.grid.get(row).set(col, newCell)
+      board
     case Revealed(_, _) =>
       println("Cannot flag a revealed cell!")
       board
   }
 }
 
-// Count adjacent mines
 def countAdjacentMines(board: Board, row: Int, col: Int): Int = {
-  neighbors(row, col, board.rows, board.cols).sum {
+  with on[OutOfBounds].panic
+  var counter = 0
+  neighbors(row, col, board.rows, board.cols).foreach {
     case (r, c) => board.grid.get(r).get(c) match {
-      case Hidden(true, _) => 1
-      case _            => 0
+      case Hidden(true, _) => counter = counter + 1
+      case _            => ()
     }
   }
+  counter
 }
 
-effect offset(): Nothing
+effect offset(): Int
 
 def neighbors(row: Int, col: Int, rows: Int, cols: Int): List[(Int, Int)] = {
+  var list: List[(Int,Int)] = empty()
   try {
     val dr = do offset()
     val dc = do offset()
-    if (dr == 0 && dc == 0) do break()
     val nr = row + dr
     val nc = col + dc
-    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) (nc,nr)
+    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(dr == 0 && dc == 0)) list = Cons((nc,nr),list)
   } with offset {
     def offset() = each(-1,1){v => resume(v)}
   }
+  list.reverse
 }
 
-def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver} = {
+def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver, Reveal} = {
   neighbors(row, col, board.rows, board.cols).foldLeft(board) {
-    case (b, (r, c)) => revealCell(b, r, c)
+    (b, coord) => revealCell(b, coord.first, coord.second)
   }
 }
 
 def printBoard(board: Board): Unit = {
+  var str = ""
   foreach(board.grid) {row =>
-    println(row.map {
-      case Hidden(_, true)       => "F"
-      case Hidden(_, false)      => "."
-      case Revealed(_, count) and (count > 0) => count.toString
-      case Revealed(_, _) => " "
-    })
+    foreach(row) {elem =>
+      str = str ++ (elem match {
+        case Hidden(_, true)       => "F"
+        case Hidden(_, false)      => "."
+        case Revealed(_, count) and (count > 0) => show(count)
+        case Revealed(_, _) => " "
+      })
+    }
   }
 }
 
