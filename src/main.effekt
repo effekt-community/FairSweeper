@@ -23,19 +23,26 @@ def main() = {
     playGame(board)
   } with Reveal { (row, col) =>
     println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    resume(
-      try{ revealCell(board, row, col) }
-      with GameOver { println("Game Over! You hit a mine."); board }
-    )
+    try {resume(revealCell(board, row, col))}
+    with GameOver {println("Game Over! You hit a mine.")}
   }
   with Flag { (row, col) =>
     println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
     resume(flagCell(board, row, col))
   }
+  println("over")
 }
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
-  val grid = array(rows, array(cols, Hidden(false, false)))
+  with on[OutOfBounds].panic
+  var grid: Array[Array[Cell]] = allocate(rows)
+  each(0,rows) {curr =>
+    var row: Array[Cell] = allocate(cols)
+    each(0,cols) {cell =>
+      row.set(cell, Hidden(if (cell == 3) true else false, false))
+    }
+    grid.set(curr, row)
+  }
   Board(grid, rows, cols, mines)
 }
 
@@ -46,8 +53,8 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
     printBoard(board)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     board = input.split(" ") match {
-      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal(x.toInt, y.toInt)
-      case Cons("f", Cons(x, Cons(y, _))) => do Flag(x.toInt, y.toInt)
+      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal(y.toInt, x.toInt)
+      case Cons("f", Cons(x, Cons(y, _))) => do Flag(y.toInt, x.toInt)
       case _ =>
         println("Invalid input. Try again.")
         board
@@ -103,9 +110,9 @@ def neighbors(row: Int, col: Int, rows: Int, cols: Int): List[(Int, Int)] = {
     val dc = do offset()
     val nr = row + dr
     val nc = col + dc
-    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(dr == 0 && dc == 0)) list = Cons((nc,nr),list)
+    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(dr == 0 && dc == 0)) list = Cons((nr,nc),list)
   } with offset {
-    def offset() = each(-1,1){v => resume(v)}
+    def offset() = each(-1,2){v => resume(v)}
   }
   list.reverse
 }

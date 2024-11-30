@@ -22,7 +22,10 @@
 
 - Board
 - CLI interactions
-- Print board
+- print board
+- reveal squares and propagate through field until bombs are nearby
+- working bombs
+- flag squares
 
 ## Useful commands
 
