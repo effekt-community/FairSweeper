@@ -4,6 +4,8 @@
 
 - [FairSweeper](#fairsweeper)
   - [Table of contents](#table-of-contents)
+  - [Progress](#progress)
+    - [Week 1](#week-1)
   - [Useful commands](#useful-commands)
     - [Effekt commands](#effekt-commands)
     - [Nix-related commands](#nix-related-commands)
@@ -13,6 +15,14 @@
   - [Used Template](#used-template)
 
 ---
+
+## Progress
+
+### Week 1
+
+- Board
+- CLI interactions
+- Print board
 
 ## Useful commands
 

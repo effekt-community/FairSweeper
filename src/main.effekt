@@ -17,7 +17,7 @@ type Cell {
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
 def main() = {
-  val board = initializeBoard(10, 10, 10)
+  var board = initializeBoard(10, 10, 10)
 
   try {
     playGame(board)
@@ -55,6 +55,18 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   }
 }
 
+def flagCell(board: Board, row: Int, col: Int): Board / {} = {
+  with on[OutOfBounds].panic
+  val cell = board.grid.get(row).get(col)
+  cell match {
+    case Hidden(hasMine, isFlagged) =>
+      board.grid.get(row).set(col, Hidden(hasMine, not(isFlagged)))
+    case Revealed(_, _) =>
+      println("Cannot flag a revealed cell!")
+  }
+  board
+}
+
 def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
   with on[OutOfBounds].panic
   val cell = board.grid.get(row).get(col)
@@ -70,27 +82,13 @@ def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
   }
 }
 
-def flagCell(board: Board, row: Int, col: Int): Board / {} = {
-  with on[OutOfBounds].panic
-  val cell = board.grid.get(row).get(col)
-  cell match {
-    case Hidden(hasMine, isFlagged) =>
-      val newCell = Hidden(hasMine, not(isFlagged))
-      board.grid.get(row).set(col, newCell)
-      board
-    case Revealed(_, _) =>
-      println("Cannot flag a revealed cell!")
-      board
-  }
-}
-
 def countAdjacentMines(board: Board, row: Int, col: Int): Int = {
   with on[OutOfBounds].panic
   var counter = 0
   neighbors(row, col, board.rows, board.cols).foreach {
     case (r, c) => board.grid.get(r).get(c) match {
       case Hidden(true, _) => counter = counter + 1
-      case _            => ()
+      case _               => ()
     }
   }
   counter
@@ -121,10 +119,11 @@ def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver} = 
 def printBoard(board: Board): Unit = {
   var str = ""
   var counter = 0
+  str = str ++ "\n"
   str = str ++ "*|"
   each(0, board.cols) {n => str = str ++ show(n) ++ "|"}
-  str = str ++ "\n"
   foreach(board.grid) {row =>
+    str = str ++ "\n"
     str = str ++ show(counter) ++ "|"
     counter = counter + 1
     foreach(row) {elem =>
@@ -135,7 +134,6 @@ def printBoard(board: Board): Unit = {
         case Revealed(_, _) => " "
       }) ++ "|"
     }
-    str = str ++ "\n"
   }
   println(str)
 }
