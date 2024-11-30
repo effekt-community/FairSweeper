@@ -1,5 +1,136 @@
 module main // must be named same as the file!
 
 import src/lib
+import io/console
 
-def main(): Unit = println(helloWorld())
+// def main(): Unit = println(helloWorld())
+
+// Define custom effects for the game logic
+effect Reveal(row: Int, col: Int): Board
+effect GameOver(): Unit
+effect Flag(row: Int, col: Int): Board
+
+type Cell {
+  Hidden(hasMine: Bool, isFlagged: Bool) // Added `isFlagged` to track flagged cells
+  Revealed(isMine: Bool, adjacentMines: Int)
+}
+
+// Board representation
+record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
+
+def main() = {
+  // Initialize the board with 10x10 size and 10 mines
+  val board = initializeBoard(10, 10, 10)
+
+  // Play the game using handlers
+  try {
+    playGame(board)
+  } with Reveal { (row, col) =>
+    println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
+    resume(revealCell(board, row, col))
+  } with GameOver {
+    println("Game Over! You hit a mine.")
+  } with Flag { (row, col) =>
+    println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
+    resume(flagCell(board, row, col))
+  }
+}
+
+// Initialize the Minesweeper board
+def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
+  val grid = array(rows, array(cols, Hidden(false, false)))
+  Board(grid, rows, cols, mines)
+}
+
+// Main game loop
+def playGame(board: Board): Unit / {Flag, Reveal, GameOver} = {
+  var board = board
+  while (true) {
+    printBoard(board)
+    val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
+    board = input.split(" ").toList() match {
+      case ("r", x, y, _)  => do Reveal(x.toInt, y.toInt)
+      case ("f", x, y, _) => do Flag(x.toInt, y.toInt)
+      case _ =>
+        println("Invalid input. Try again.")
+        board
+    }
+  }
+}
+
+// Reveal a cell
+def revealCell(board: Board, row: Int, col: Int): Board / {Reveal, GameOver} = {
+  val cell = board.grid.get(row).get(col)
+  cell match {
+    case Hidden(hasMine) =>
+      if (hasMine) do GameOver()
+      else {
+        val adjMines = countAdjacentMines(board, row, col)
+        val newGrid = board.grid.set(row, board.grid.get(row).set(col, Revealed(false, adjMines)))
+        val newBoard = board.copy(newGrid)
+        if (adjMines == 0) revealAdjacentCells(newBoard, row, col) else newBoard
+      }
+    case _ => board // Cell already revealed or flagged
+  }
+}
+
+def flagCell(board: Board, row: Int, col: Int): Board / {Flag} = {
+  val cell = board.grid.get(row).get(col)
+  cell match {
+    case Hidden(hasMine, isFlagged) =>
+      val newCell = Hidden(hasMine, not(isFlagged)) // Toggle the flag
+      val newGrid = board.grid.set(row, board.grid.get(row).set(col, newCell))
+      board.copy(newGrid)
+    case Revealed(_, _) =>
+      println("Cannot flag a revealed cell!")
+      board
+  }
+}
+
+// Count adjacent mines
+def countAdjacentMines(board: Board, row: Int, col: Int): Int = {
+  neighbors(row, col, board.rows, board.cols).sum {
+    case (r, c) => board.grid.get(r).get(c) match {
+      case Hidden(true, _) => 1
+      case _            => 0
+    }
+  }
+}
+
+effect offset(): Nothing
+
+def neighbors(row: Int, col: Int, rows: Int, cols: Int): List[(Int, Int)] = {
+  try {
+    val dr = do offset()
+    val dc = do offset()
+    if (dr == 0 && dc == 0) do break()
+    val nr = row + dr
+    val nc = col + dc
+    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) (nc,nr)
+  } with offset {
+    def offset() = each(-1,1){v => resume(v)}
+  }
+}
+
+def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver} = {
+  neighbors(row, col, board.rows, board.cols).foldLeft(board) {
+    case (b, (r, c)) => revealCell(b, r, c)
+  }
+}
+
+def printBoard(board: Board): Unit = {
+  foreach(board.grid) {row =>
+    println(row.map {
+      case Hidden(_, true)       => "F"
+      case Hidden(_, false)      => "."
+      case Revealed(_, count) and (count > 0) => count.toString
+      case Revealed(_, _) => " "
+    })
+  }
+}
+
+def askUser(prompt: String): String = {
+  with console
+  println(prompt)
+  do readLine()
+}
