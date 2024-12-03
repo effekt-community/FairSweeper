@@ -22,23 +22,24 @@ def createTestBoard(): Board = {
   Board(grid, rows, cols, 2)
 }
 
-// def testFlagCell() = {
-//   val board = createTestBoard()
-//   val updatedBoard = flagCell(board, 1, 1)
-//   do assert(updatedBoard.getCell(1,1).isFlagged == true, "Flagging failed")
-//   val toggledBoard = flagCell(updatedBoard, 1, 1)
-//   do assert(toggledBoard.getCell(1,1).isFlagged == false, "Removing flag failed")
-// }
+def testFlagCell() = {
+  val board = createTestBoard()
+  val xy = (1,1)
+  val updatedBoard = flagCell(board, xy)
+  do assert(equals(updatedBoard.getCell(xy), Hidden(false,true)), "Flagging failed")
+  val toggledBoard = flagCell(updatedBoard, xy)
+  do assert(equals(toggledBoard.getCell(xy), Hidden(false,false)), "Removing flag failed")
+}
 
 def testRevealCell() = {
   val board = createTestBoard()
   try {
-    val revealedBoard = revealCell(board, 0, 0)
-    do assert(revealedBoard.getCell(0, 0) match {
+    val revealedBoard = revealCell(board, (0, 0))
+    do assert(revealedBoard.getCell((0, 0)) match {
       case Revealed(false, _) => true
       case _                  => false
     }, "Reveal failed for non-mine cell")
-    revealCell(board, 2, 2)
+    revealCell(board, (2, 2))
     do assert(false, "Reveal failed to trigger GameOver for mine")
   } with GameOver {
     println("GameOver correctly triggered")
@@ -47,7 +48,7 @@ def testRevealCell() = {
 
 def testCountAdjacentMines() = {
   val board = createTestBoard()
-  val count = countAdjacentMines(board, 3, 3)
+  val count = countAdjacentMines(board, (3, 3))
   do assert(count == 2, "Incorrect adjacent mine count")
 }
 
@@ -55,7 +56,7 @@ def runTests() = {
   println("Running tests...")
   val suiteName = "Fairsweeper"
   suite(suiteName){
-    // test("FlagCell"){testFlagCell()}
+    test("FlagCell"){testFlagCell()}
     test("RevealCell"){testRevealCell()}
     test("AdjacentMines"){testCountAdjacentMines()}
     }

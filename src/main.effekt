@@ -3,16 +3,21 @@ module main // must be named same as the file!
 import src/lib
 import io/console
 
-// def main(): Unit = println(helloWorld())
-
-effect Reveal(row: Int, col: Int): Board
+effect Reveal(cell: (Int,Int)): Board
 effect GameOver(): Board
-effect Flag(row: Int, col: Int): Board
+effect Flag(cell: (Int,Int)): Board
 
 type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(isMine: Bool, adjacentMines: Int)
 }
+
+def infixEq(left: Cell, right: Cell): Bool =
+  if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
+    l1 == r1 && l2 == r2
+  } else if (left is Revealed(l1, l2) and right is Revealed(r1, r2)) {
+    l1 == r1 && l2 == r2
+  } else false
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
@@ -21,39 +26,45 @@ def main() = {
 
   try {
     playGame(board)
-  } with Reveal { (row, col) =>
+  } with Reveal { case (row,col) =>
     println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    try {resume(revealCell(board, row, col))}
+    try {resume(revealCell(board, (row, col)))}
     with GameOver {println("Game Over! You hit a mine.")}
   }
-  with Flag { (row, col) =>
+  with Flag { case (row, col) =>
     println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    resume(flagCell(board, row, col))
+    resume(flagCell(board, (row, col)))
   }
   println("over")
 }
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
+  return buildBoard(rows, cols, Nil())
+}
+
+def buildBoard(rows: Int, cols: Int, mines: List[(Int,Int)]): Board = {
   with on[OutOfBounds].panic
   var grid: Array[Array[Cell]] = allocate(rows)
-  each(0,rows) {curr =>
+  each(0,rows) {rw =>
     var row: Array[Cell] = allocate(cols)
-    each(0,cols) {cell =>
-      row.set(cell, Hidden(if (cell == 3) true else false, false))
+    each(0,cols) {cl =>
+      row.set(cl, Hidden(false, false))
     }
-    grid.set(curr, row)
+    grid.set(rw, row)
   }
-  Board(grid, rows, cols, mines)
+  var board = Board(grid, rows, cols, mines.size())
+  mines.foreach() {cell => board.setCell(cell, Hidden(true, false))}
+  return board
 }
 
-def getCell(board: Board, row: Int, col: Int): Cell = {
+def getCell(board: Board, cell: (Int,Int)): Cell = {
   with on[OutOfBounds].panic
-  return board.grid.get(row).get(col)
+  return board.grid.get(cell.first).get(cell.second)
 }
 
-def setCell(board: Board, row: Int, col: Int, new_val: Cell): Unit = {
+def setCell(board: Board, cell: (Int,Int), new_val: Cell): Unit = {
   with on[OutOfBounds].panic
-  board.grid.get(row).set(col, new_val)
+  if (cell is (row,col)) board.grid.get(row).set(col, new_val)
 }
 
 def playGame(board: Board): Unit / {Flag, Reveal} = {
@@ -63,8 +74,8 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
     printBoard(board)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     board = input.split(" ") match {
-      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal(y.toInt, x.toInt)
-      case Cons("f", Cons(x, Cons(y, _))) => do Flag(y.toInt, x.toInt)
+      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
+      case Cons("f", Cons(x, Cons(y, _))) => do Flag((y.toInt, x.toInt))
       case _ =>
         println("Invalid input. Try again.")
         board
@@ -72,61 +83,58 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   }
 }
 
-def flagCell(board: Board, row: Int, col: Int): Board / {} = {
-  val cell = board.getCell(row, col)
+def flagCell(board: Board, xy: (Int,Int)): Board / {} = {
+  val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, isFlagged) =>
-      board.setCell(row, col, Hidden(hasMine, not(isFlagged)))
+      board.setCell(xy, Hidden(hasMine, not(isFlagged)))
     case Revealed(_, _) =>
       println("Cannot flag a revealed cell!")
   }
   board
 }
 
-def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
-  val cell = board.getCell(row, col)
+def revealCell(board: Board, xy: (Int,Int)): Board / {GameOver} = {
+  val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
       if (hasMine) do GameOver()
       else {
-        val adjMines = countAdjacentMines(board, row, col)
-        board.setCell(row, col, Revealed(false, adjMines))
-        if (adjMines == 0) revealAdjacentCells(board, row, col) else board
+        val adjMines = countAdjacentMines(board, xy)
+        board.setCell(xy, Revealed(false, adjMines))
+        if (adjMines == 0) revealAdjacentCells(board, xy) else board
       }
     case _ => board
   }
 }
 
-def countAdjacentMines(board: Board, row: Int, col: Int): Int = {
+def countAdjacentMines(board: Board, cell: (Int,Int)): Int = {
   var counter = 0
-  neighbors(row, col, board.rows, board.cols).foreach {
-    case (r, c) => board.getCell(r, c) match {
-      case Hidden(true, _) => counter = counter + 1
-      case _               => ()
-    }
+  neighbors(cell, board.rows, board.cols).foreach {
+    cel => if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
   }
   counter
 }
 
 effect offset(): Int
 
-def neighbors(row: Int, col: Int, rows: Int, cols: Int): List[(Int, Int)] = {
+def neighbors(cell: (Int,Int), rows: Int, cols: Int): List[(Int, Int)] = {
   var list: List[(Int,Int)] = empty()
   try {
     val dr = do offset()
     val dc = do offset()
-    val nr = row + dr
-    val nc = col + dc
-    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(dr == 0 && dc == 0)) list = Cons((nr,nc),list)
+    val nr = cell.first + dr
+    val nc = cell.second + dc
+    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons((nr,nc),list)
   } with offset {
     def offset() = each(-1,2){v => resume(v)}
   }
   list.reverse
 }
 
-def revealAdjacentCells(board: Board, row: Int, col: Int): Board / {GameOver} = {
-  neighbors(row, col, board.rows, board.cols).foldLeft(board) {
-    (b, coord) => revealCell(b, coord.first, coord.second)
+def revealAdjacentCells(board: Board, cell: (Int,Int)): Board / {GameOver} = {
+  neighbors(cell, board.rows, board.cols).foldLeft(board) {
+    (b, xy) => revealCell(b, xy)
   }
 }
 
