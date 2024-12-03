@@ -46,6 +46,16 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   Board(grid, rows, cols, mines)
 }
 
+def getCell(board: Board, row: Int, col: Int): Cell = {
+  with on[OutOfBounds].panic
+  return board.grid.get(row).get(col)
+}
+
+def setCell(board: Board, row: Int, col: Int, new_val: Cell): Unit = {
+  with on[OutOfBounds].panic
+  board.grid.get(row).set(col, new_val)
+}
+
 def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
@@ -63,11 +73,10 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
 }
 
 def flagCell(board: Board, row: Int, col: Int): Board / {} = {
-  with on[OutOfBounds].panic
-  val cell = board.grid.get(row).get(col)
+  val cell = board.getCell(row, col)
   cell match {
     case Hidden(hasMine, isFlagged) =>
-      board.grid.get(row).set(col, Hidden(hasMine, not(isFlagged)))
+      board.setCell(row, col, Hidden(hasMine, not(isFlagged)))
     case Revealed(_, _) =>
       println("Cannot flag a revealed cell!")
   }
@@ -75,14 +84,13 @@ def flagCell(board: Board, row: Int, col: Int): Board / {} = {
 }
 
 def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
-  with on[OutOfBounds].panic
-  val cell = board.grid.get(row).get(col)
+  val cell = board.getCell(row, col)
   cell match {
     case Hidden(hasMine, _) =>
       if (hasMine) do GameOver()
       else {
         val adjMines = countAdjacentMines(board, row, col)
-        board.grid.get(row).set(col, Revealed(false, adjMines))
+        board.setCell(row, col, Revealed(false, adjMines))
         if (adjMines == 0) revealAdjacentCells(board, row, col) else board
       }
     case _ => board
@@ -90,10 +98,9 @@ def revealCell(board: Board, row: Int, col: Int): Board / {GameOver} = {
 }
 
 def countAdjacentMines(board: Board, row: Int, col: Int): Int = {
-  with on[OutOfBounds].panic
   var counter = 0
   neighbors(row, col, board.rows, board.cols).foreach {
-    case (r, c) => board.grid.get(r).get(c) match {
+    case (r, c) => board.getCell(r, c) match {
       case Hidden(true, _) => counter = counter + 1
       case _               => ()
     }

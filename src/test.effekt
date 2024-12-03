@@ -2,9 +2,65 @@ module src/test
 
 import test
 import src/lib
+import src/main
 
-def main() = mainSuite("lib") {
-  test("Hello world") {
-    assertEqual(helloWorld(), "Hello, world!")
+def createTestBoard(): Board = {
+  with on[OutOfBounds].panic()
+  val rows = 5
+  val cols = 5
+  val grid: Array[Array[Cell]] = allocate(rows)
+  each(0, rows) { r =>
+    val row: Array[Cell] = allocate(cols)
+    each(0, cols) { c =>
+      if ((r == 2 && c == 2) || (r == 4 && c == 4)) // Place mines at (2,2) and (4,4)
+        row.set(c, Hidden(true, false))
+      else
+        row.set(c, Hidden(false, false))
+    }
+    grid.set(r, row)
+  }
+  Board(grid, rows, cols, 2)
+}
+
+// def testFlagCell() = {
+//   val board = createTestBoard()
+//   val updatedBoard = flagCell(board, 1, 1)
+//   do assert(updatedBoard.getCell(1,1).isFlagged == true, "Flagging failed")
+//   val toggledBoard = flagCell(updatedBoard, 1, 1)
+//   do assert(toggledBoard.getCell(1,1).isFlagged == false, "Removing flag failed")
+// }
+
+def testRevealCell() = {
+  val board = createTestBoard()
+  try {
+    val revealedBoard = revealCell(board, 0, 0)
+    do assert(revealedBoard.getCell(0, 0) match {
+      case Revealed(false, _) => true
+      case _                  => false
+    }, "Reveal failed for non-mine cell")
+    revealCell(board, 2, 2)
+    do assert(false, "Reveal failed to trigger GameOver for mine")
+  } with GameOver {
+    println("GameOver correctly triggered")
   }
 }
+
+def testCountAdjacentMines() = {
+  val board = createTestBoard()
+  val count = countAdjacentMines(board, 3, 3)
+  do assert(count == 2, "Incorrect adjacent mine count")
+}
+
+def runTests() = {
+  println("Running tests...")
+  val suiteName = "Fairsweeper"
+  suite(suiteName){
+    // test("FlagCell"){testFlagCell()}
+    test("RevealCell"){testRevealCell()}
+    test("AdjacentMines"){testCountAdjacentMines()}
+    }
+  println("All tests passed!")
+}
+
+def main() = runTests()
+
