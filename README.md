@@ -20,6 +20,7 @@
 
 ### Week 1
 
+- some simple tests
 - Board
 - CLI interactions
 - print board
