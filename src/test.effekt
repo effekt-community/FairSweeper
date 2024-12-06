@@ -1,8 +1,7 @@
 module src/test
 
 import test
-import src/lib
-import src/main
+import src/game
 
 def createTestBoard(): Board = {
   with on[OutOfBounds].panic()

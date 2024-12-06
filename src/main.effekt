@@ -1,25 +1,7 @@
 module main // must be named same as the file!
 
-import src/lib
 import io/console
-
-effect Reveal(cell: (Int,Int)): Board
-effect GameOver(): Board
-effect Flag(cell: (Int,Int)): Board
-
-type Cell {
-  Hidden(hasMine: Bool, isFlagged: Bool)
-  Revealed(isMine: Bool, adjacentMines: Int)
-}
-
-def infixEq(left: Cell, right: Cell): Bool =
-  if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
-    l1 == r1 && l2 == r2
-  } else if (left is Revealed(l1, l2) and right is Revealed(r1, r2)) {
-    l1 == r1 && l2 == r2
-  } else false
-
-record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
+import src/game
 
 def main() = {
   var board = initializeBoard(10, 10, 10)
@@ -38,35 +20,6 @@ def main() = {
   println("over")
 }
 
-def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
-  return buildBoard(rows, cols, Nil())
-}
-
-def buildBoard(rows: Int, cols: Int, mines: List[(Int,Int)]): Board = {
-  with on[OutOfBounds].panic
-  var grid: Array[Array[Cell]] = allocate(rows)
-  each(0,rows) {rw =>
-    var row: Array[Cell] = allocate(cols)
-    each(0,cols) {cl =>
-      row.set(cl, Hidden(false, false))
-    }
-    grid.set(rw, row)
-  }
-  var board = Board(grid, rows, cols, mines.size())
-  mines.foreach() {cell => board.setCell(cell, Hidden(true, false))}
-  return board
-}
-
-def getCell(board: Board, cell: (Int,Int)): Cell = {
-  with on[OutOfBounds].panic
-  return board.grid.get(cell.first).get(cell.second)
-}
-
-def setCell(board: Board, cell: (Int,Int), new_val: Cell): Unit = {
-  with on[OutOfBounds].panic
-  if (cell is (row,col)) board.grid.get(row).set(col, new_val)
-}
-
 def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
@@ -83,59 +36,10 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   }
 }
 
-def flagCell(board: Board, xy: (Int,Int)): Board / {} = {
-  val cell = board.getCell(xy)
-  cell match {
-    case Hidden(hasMine, isFlagged) =>
-      board.setCell(xy, Hidden(hasMine, not(isFlagged)))
-    case Revealed(_, _) =>
-      println("Cannot flag a revealed cell!")
-  }
-  board
-}
-
-def revealCell(board: Board, xy: (Int,Int)): Board / {GameOver} = {
-  val cell = board.getCell(xy)
-  cell match {
-    case Hidden(hasMine, _) =>
-      if (hasMine) do GameOver()
-      else {
-        val adjMines = countAdjacentMines(board, xy)
-        board.setCell(xy, Revealed(false, adjMines))
-        if (adjMines == 0) revealAdjacentCells(board, xy) else board
-      }
-    case _ => board
-  }
-}
-
-def countAdjacentMines(board: Board, cell: (Int,Int)): Int = {
-  var counter = 0
-  neighbors(cell, board.rows, board.cols).foreach {
-    cel => if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
-  }
-  counter
-}
-
-effect offset(): Int
-
-def neighbors(cell: (Int,Int), rows: Int, cols: Int): List[(Int, Int)] = {
-  var list: List[(Int,Int)] = empty()
-  try {
-    val dr = do offset()
-    val dc = do offset()
-    val nr = cell.first + dr
-    val nc = cell.second + dc
-    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons((nr,nc),list)
-  } with offset {
-    def offset() = each(-1,2){v => resume(v)}
-  }
-  list.reverse
-}
-
-def revealAdjacentCells(board: Board, cell: (Int,Int)): Board / {GameOver} = {
-  neighbors(cell, board.rows, board.cols).foldLeft(board) {
-    (b, xy) => revealCell(b, xy)
-  }
+def askUser(prompt: String): String = {
+  with console
+  println(prompt)
+  do readLine()
 }
 
 def printBoard(board: Board): Unit = {
@@ -158,10 +62,4 @@ def printBoard(board: Board): Unit = {
     }
   }
   println(str)
-}
-
-def askUser(prompt: String): String = {
-  with console
-  println(prompt)
-  do readLine()
 }
