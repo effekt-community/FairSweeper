@@ -5,6 +5,7 @@
 - [FairSweeper](#fairsweeper)
   - [Table of contents](#table-of-contents)
   - [Progress](#progress)
+    - [Week 2](#week-2)
     - [Week 1](#week-1)
   - [Useful commands](#useful-commands)
     - [Effekt commands](#effekt-commands)
@@ -17,6 +18,12 @@
 ---
 
 ## Progress
+
+### Week 2
+
+- randomized bombs placement
+- show bomb locations
+- split program into multiple files
 
 ### Week 1
 
