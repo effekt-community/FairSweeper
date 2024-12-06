@@ -4,6 +4,9 @@ effect Reveal(cell: (Int,Int)): Board
 effect GameOver(): Board
 effect Flag(cell: (Int,Int)): Board
 
+// for iterating through values
+effect Offset(s: Int, e: Int): Int
+
 type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(isMine: Bool, adjacentMines: Int)
@@ -34,8 +37,19 @@ def buildBoard(rows: Int, cols: Int, mines: List[(Int,Int)]): Board = {
 }
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
-  // TODO: random initilization
-  return buildBoard(rows, cols, Nil())
+  var cells: List[(Int,Int)] = empty()
+  try {
+    val x = do Offset(0, rows)
+    val y = do Offset(0, cols)
+    cells = cells.append(Cons((x,y),Nil()))
+  } with Offset {(s,e) =>
+    each(s,e) {v => resume(v)}
+  }
+  while (cells.size() > mines) {
+    val idx = (random() * cells.size().toDouble()).floor()
+    cells = cells.deleteAt(idx)
+  }
+  return buildBoard(rows, cols, cells)
 }
 
 def getCell(board: Board, cell: (Int,Int)): Cell = {
@@ -81,18 +95,16 @@ def countAdjacentMines(board: Board, cell: (Int,Int)): Int = {
   counter
 }
 
-effect Offset(): Int
-
 def neighbors(cell: (Int,Int), rows: Int, cols: Int): List[(Int, Int)] = {
   var list: List[(Int,Int)] = empty()
   try {
-    val dr = do Offset()
-    val dc = do Offset()
+    val dr = do Offset(-1, 2)
+    val dc = do Offset(-1, 2)
     val nr = cell.first + dr
     val nc = cell.second + dc
     if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons((nr,nc),list)
-  } with Offset {
-    each(-1,2){v => resume(v)}
+  } with Offset {(s,e) =>
+    each(s,e){v => resume(v)}
   }
   list.reverse
 }
