@@ -23,9 +23,19 @@ def infixEq(left: Cell, right: Cell): Bool =
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
-// def collectWithIndex(board: Board){f: Cell => Bool}: List[(XY,Cell)] = {
-
-// }
+def collectWithXY(board: Board){f: Cell => Bool}: List[(XY,Cell)] = {
+  var acc: List[(XY,Cell)] = empty()
+  try {
+    val x = do Offset(0, board.cols)
+    val y = do Offset(0, board.rows)
+    val xy = XY(x,y)
+    val cell = board.getCell(xy)
+    if (f(cell)) acc = acc.append(Cons((xy, cell), Nil()))
+  } with Offset {(s,e) =>
+    each(s,e) {v => resume(v)}
+  }
+  acc
+}
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
