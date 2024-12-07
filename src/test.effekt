@@ -11,6 +11,7 @@ F 2 F
 ? ? ?
 **/
 def complexBoard1() = buildBoard(3, 3, Cons(XY(0,0),Cons(XY(2,0),Cons(XY(0,2),Cons(XY(2,2),Nil())))))
+
 /**
 ? ? ? ? ? ?
 F 2 2 2 2 ?
@@ -51,9 +52,9 @@ def testCountAdjacentMines() = {
 
 def testCollectWithXY() = {
   val board = simpleBoard1()
-  val collectedCells = collectWithXY(board){
+  val collectedCells = collectWithXY(board) {
     case Hidden(true, _) => true
-    case _            => false
+    case _               => false
   }
   val res = collectedCells.all() {
     case (XY(2,2),Hidden(true,false)) => true

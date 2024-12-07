@@ -26,7 +26,7 @@ record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 def collectWithXY(board: Board) {f: Cell => Bool}: List[(XY,Cell)] = {
   var acc: List[(XY,Cell)] = empty()
   board.foreach() {(xy, cell) =>
-    acc = acc.append(Cons((xy, cell), Nil()))
+    if (f(cell)) acc = acc.append(Cons((xy, cell), Nil()))
   }
   acc
 }
@@ -107,20 +107,21 @@ def revealCell(board: Board, xy: XY): Board / {GameOver} = {
 
 def countAdjacentMines(board: Board, xy: XY): Int = {
   var counter = 0
-  neighbors(xy, board.rows, board.cols).foreach {
+  board.neighbors(xy).foreach {
     cel => if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
   }
   counter
 }
 
-def neighbors(cell: XY, rows: Int, cols: Int): List[XY] = {
+def neighbors(board: Board, cell: XY): List[XY] = {
   var list: List[XY] = empty()
   try {
     val dr = do Offset(-1, 2)
     val dc = do Offset(-1, 2)
     val nr = cell.x + dr
     val nc = cell.y + dc
-    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons(XY(nr,nc),list)
+    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dr,dc),(0,0)))) list =
+      Cons(XY(nr,nc),list)
   } with Offset {(s,e) =>
     each(s,e){v => resume(v)}
   }
@@ -128,7 +129,7 @@ def neighbors(cell: XY, rows: Int, cols: Int): List[XY] = {
 }
 
 def revealAdjacentCells(board: Board, xy: XY): Board / {GameOver} = {
-  neighbors(xy, board.rows, board.cols).foldLeft(board) {
+  board.neighbors(xy).foldLeft(board) {
     (b, xy) => revealCell(b, xy)
   }
 }
