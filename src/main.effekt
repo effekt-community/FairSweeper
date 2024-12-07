@@ -24,7 +24,7 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
   while (true) {
-    printBoard(board, true)
+    printBoard(board, false)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     board = input.split(" ") match {
       case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
@@ -57,8 +57,8 @@ def printBoard(board: Board, showBombs: Bool): Unit = {
         case Hidden(true, _) and showBombs      => "B"
         case Hidden(_, true)                    => "F"
         case Hidden(_, false)                   => "◼"
-        case Revealed(_, count) and (count > 0) => show(count)
-        case Revealed(_, _)                     => " "
+        case Revealed(count) and (count > 0) => show(count)
+        case Revealed(_)                     => " "
       }) ++ "|"
     }
   }

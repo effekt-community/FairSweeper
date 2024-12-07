@@ -9,14 +9,14 @@ effect Offset(s: Int, e: Int): Int
 
 type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
-  Revealed(isMine: Bool, adjacentMines: Int)
+  Revealed(adjacentMines: Int)
 }
 
 def infixEq(left: Cell, right: Cell): Bool =
   if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
     l1 == r1 && l2 == r2
-  } else if (left is Revealed(l1, l2) and right is Revealed(r1, r2)) {
-    l1 == r1 && l2 == r2
+  } else if (left is Revealed(a) and right is Revealed(b)) {
+    a == b
   } else false
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
@@ -67,7 +67,7 @@ def flagCell(board: Board, xy: (Int,Int)): Board / {} = {
   cell match {
     case Hidden(hasMine, isFlagged) =>
       board.setCell(xy, Hidden(hasMine, not(isFlagged)))
-    case Revealed(_, _) =>
+    case Revealed(_) =>
       println("Cannot flag a revealed cell!")
   }
   board
@@ -80,7 +80,7 @@ def revealCell(board: Board, xy: (Int,Int)): Board / {GameOver} = {
       if (hasMine) do GameOver()
       else {
         val adjMines = countAdjacentMines(board, xy)
-        board.setCell(xy, Revealed(false, adjMines))
+        board.setCell(xy, Revealed(adjMines))
         if (adjMines == 0) revealAdjacentCells(board, xy) else board
       }
     case _ => board
