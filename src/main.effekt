@@ -5,7 +5,7 @@ import src/game
 
 def main() = {
   var board = initializeBoard(10, 10, 10)
-  println(clearHistory())
+  println(clear())
 
   try {
     playGame(board)
@@ -25,10 +25,9 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
   while (true) {
-    // Test the Functions
     printBoard(board, false)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
-    println(clearHistory())
+    println(clear())
     board = input.split(" ") match {
       case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
       case Cons("f", Cons(x, Cons(y, _))) => do Flag((y.toInt, x.toInt))
@@ -75,6 +74,6 @@ namespace Escape {
   def eraseDisplay(x: Int): String = escape(x.show ++ "J")
 }
 
-def clearHistory(): String = {
+def clear(): String = {
   Escape::eraseDisplay(2) ++ Escape::cursorPosition(1, 1)
 }
