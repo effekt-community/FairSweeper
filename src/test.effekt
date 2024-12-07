@@ -22,9 +22,9 @@ def testRevealCell() = {
   try {
     val revealedBoard = revealCell(board, (0, 0))
     do assert(revealedBoard.getCell((0, 0)) match {
-      case Revealed(false, _) => true
+      case Revealed(_) => true
       case _                  => false
-    }, "Reveal failed for non-mine cell")
+    }, "Reveal failed")
     revealCell(board, (2, 2))
     do assert(false, "Reveal failed to trigger GameOver for mine")
   } with GameOver {

@@ -4,8 +4,8 @@ effect Reveal(cell: (Int,Int)): Board
 effect GameOver(): Board
 effect Flag(cell: (Int,Int)): Board
 
-// for iterating through values
-effect Offset(s: Int, e: Int): Int
+// for resuming with each value with each()
+effect Offset(start: Int, end: Int): Int
 
 type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
