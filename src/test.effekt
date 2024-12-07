@@ -3,13 +3,24 @@ module src/test
 import test
 import src/game
 
-def createTestBoard(): Board = {
-  with on[OutOfBounds].panic()
-  buildBoard(5, 5, Cons(XY(2,2),Cons(XY(4,4),Nil())))
-}
+def simpleBoard1() = buildBoard(5, 5, Cons(XY(2,2),Cons(XY(4,4),Nil())))
+
+/**
+F 2 F
+2 4 2
+? ? ?
+**/
+def complexBoard1() = buildBoard(3, 3, Cons(XY(0,0),Cons(XY(2,0),Cons(XY(0,2),Cons(XY(2,2),Nil())))))
+/**
+? ? ? ? ? ?
+F 2 2 2 2 ?
+1 1 0 0 2 ?
+0 0 0 0 1 ?
+**/
+def complexBoard2() = buildBoard(4, 6, Cons(XY(0,1),Cons(XY(2,0),Cons(XY(3,0),Cons(XY(5,1),Cons(XY(5,3),Nil()))))))
 
 def testFlagCell() = {
-  val board = createTestBoard()
+  val board = simpleBoard1()
   val xy = XY(1,1)
   val updatedBoard = flagCell(board, xy)
   do assert(equals(updatedBoard.getCell(xy), Hidden(false,true)), "Flagging failed")
@@ -18,7 +29,7 @@ def testFlagCell() = {
 }
 
 def testRevealCell() = {
-  val board = createTestBoard()
+  val board = simpleBoard1()
   try {
     val revealedBoard = revealCell(board, XY(0, 0))
     do assert(revealedBoard.getCell(XY(0, 0)) match {
@@ -33,9 +44,19 @@ def testRevealCell() = {
 }
 
 def testCountAdjacentMines() = {
-  val board = createTestBoard()
+  val board = simpleBoard1()
   val count = countAdjacentMines(board, XY(3, 3))
   do assert(count == 2, "Incorrect adjacent mine count")
+}
+
+def testSolverSimple() = {
+  val board = simpleBoard1()
+  do assert(0 == 1, "todo")
+}
+
+def testSolverComplex() = {
+  val board = complexBoard1()
+  do assert(0 == 1, "todo")
 }
 
 def runTests() = {

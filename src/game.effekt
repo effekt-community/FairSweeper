@@ -23,15 +23,15 @@ def infixEq(left: Cell, right: Cell): Bool =
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
+// def collectWithIndex(board: Board){f: Cell => Bool}: List[(XY,Cell)] = {
+
+// }
+
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
   var grid: Array[Array[Cell]] = allocate(rows)
   each(0,rows) {rw =>
-    var row: Array[Cell] = allocate(cols)
-    each(0,cols) {cl =>
-      row.set(cl, Hidden(false, false))
-    }
-    grid.set(rw, row)
+    grid.set(rw, array(cols, Hidden(false, false)))
   }
   var board = Board(grid, rows, cols, mines.size())
   mines.foreach() {cell => board.setCell(cell, Hidden(true, false))}
