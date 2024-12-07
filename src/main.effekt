@@ -10,12 +10,12 @@ def main() = {
     playGame(board)
   } with Reveal { case (row,col) =>
     println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    try {resume(revealCell(board, (row, col)))}
+    try {resume(revealCell(board, XY(row, col)))}
     with GameOver {println("Game Over! You hit a mine.")}
   }
   with Flag { case (row, col) =>
     println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    resume(flagCell(board, (row, col)))
+    resume(flagCell(board, XY(row, col)))
   }
   println("over")
 }

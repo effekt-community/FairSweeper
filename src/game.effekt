@@ -12,6 +12,8 @@ type Cell {
   Revealed(adjacentMines: Int)
 }
 
+record XY(x: Int, y: Int)
+
 def infixEq(left: Cell, right: Cell): Bool =
   if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
     l1 == r1 && l2 == r2
@@ -21,7 +23,7 @@ def infixEq(left: Cell, right: Cell): Bool =
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
-def buildBoard(rows: Int, cols: Int, mines: List[(Int,Int)]): Board = {
+def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
   var grid: Array[Array[Cell]] = allocate(rows)
   each(0,rows) {rw =>
@@ -37,11 +39,11 @@ def buildBoard(rows: Int, cols: Int, mines: List[(Int,Int)]): Board = {
 }
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
-  var cells: List[(Int,Int)] = empty()
+  var cells: List[XY] = empty()
   try {
     val x = do Offset(0, rows)
     val y = do Offset(0, cols)
-    cells = cells.append(Cons((x,y),Nil()))
+    cells = cells.append(Cons(XY(x,y),Nil()))
   } with Offset {(s,e) =>
     each(s,e) {v => resume(v)}
   }
@@ -52,17 +54,17 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   return buildBoard(rows, cols, cells)
 }
 
-def getCell(board: Board, cell: (Int,Int)): Cell = {
+def getCell(board: Board, xy: XY): Cell = {
   with on[OutOfBounds].panic
-  return board.grid.get(cell.first).get(cell.second)
+  return board.grid.get(xy.x).get(xy.y)
 }
 
-def setCell(board: Board, cell: (Int,Int), new_val: Cell): Unit = {
+def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
   with on[OutOfBounds].panic
-  if (cell is (row,col)) board.grid.get(row).set(col, new_val)
+  if (xy is XY(row,col)) board.grid.get(row).set(col, new_val)
 }
 
-def flagCell(board: Board, xy: (Int,Int)): Board / {} = {
+def flagCell(board: Board, xy: XY): Board / {} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, isFlagged) =>
@@ -73,7 +75,7 @@ def flagCell(board: Board, xy: (Int,Int)): Board / {} = {
   board
 }
 
-def revealCell(board: Board, xy: (Int,Int)): Board / {GameOver} = {
+def revealCell(board: Board, xy: XY): Board / {GameOver} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
@@ -87,30 +89,30 @@ def revealCell(board: Board, xy: (Int,Int)): Board / {GameOver} = {
   }
 }
 
-def countAdjacentMines(board: Board, cell: (Int,Int)): Int = {
+def countAdjacentMines(board: Board, xy: XY): Int = {
   var counter = 0
-  neighbors(cell, board.rows, board.cols).foreach {
+  neighbors(xy, board.rows, board.cols).foreach {
     cel => if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
   }
   counter
 }
 
-def neighbors(cell: (Int,Int), rows: Int, cols: Int): List[(Int, Int)] = {
-  var list: List[(Int,Int)] = empty()
+def neighbors(cell: XY, rows: Int, cols: Int): List[XY] = {
+  var list: List[XY] = empty()
   try {
     val dr = do Offset(-1, 2)
     val dc = do Offset(-1, 2)
-    val nr = cell.first + dr
-    val nc = cell.second + dc
-    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons((nr,nc),list)
+    val nr = cell.x + dr
+    val nc = cell.y + dc
+    if ((nr >= 0 && nr < rows && nc >= 0 && nc < cols) and not(equals((dr,dc),(0,0)))) list = Cons(XY(nr,nc),list)
   } with Offset {(s,e) =>
     each(s,e){v => resume(v)}
   }
   list.reverse
 }
 
-def revealAdjacentCells(board: Board, cell: (Int,Int)): Board / {GameOver} = {
-  neighbors(cell, board.rows, board.cols).foldLeft(board) {
+def revealAdjacentCells(board: Board, xy: XY): Board / {GameOver} = {
+  neighbors(xy, board.rows, board.cols).foldLeft(board) {
     (b, xy) => revealCell(b, xy)
   }
 }
