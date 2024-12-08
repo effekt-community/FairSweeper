@@ -32,11 +32,13 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
 
     numbers = numbers.collect() {
       case (xy, Revealed(count)) and count > 0 => Some((xy, Revealed(count)))
-      case (xy, _) =>
+      case (xy, Revealed(0)) =>
         val unrvNeighbors = board.unrevealedNeighbors(xy)
         moves = moves.append(unrvNeighbors)
         None()
+      case _ => None()
     }
+    println(numbers.size)
     do QuickMoves(moves)
 
     numbers.foreach() {
