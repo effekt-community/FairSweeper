@@ -54,20 +54,20 @@ def solve(board: Board): List[XY] / {QuickMoves} = {
 def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
   var shared: List[XY] = empty()
   l1.collect() {xy1 =>
-    val eq = l2.collect() {xy2 =>
-      if (xy1 == xy2) Some(xy1)
-      else None()
-    }
-    eq.headOption()
+    if (l2.any() {xy2 => xy2 == xy1}) Some(xy1)
+    else None()
   }
   shared
 }
 
-// def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
-//   var diff: List[XY] = empty()
-//   val intersection = l1.getIntersection(l2)
-//   intersection.foreach
-// }
+def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
+  var diff: List[XY] = empty()
+  val intersection = l1.getIntersection(l2)
+  l1.collect() {xyl =>
+    if (not(intersection.any() {xyi => xyi == xyl})) Some(xyl)
+    else None()
+  }
+}
 
 def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
   board.neighbors(xy).collect() {xy =>
