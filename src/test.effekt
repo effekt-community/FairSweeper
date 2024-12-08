@@ -2,8 +2,14 @@ module src/test
 
 import test
 import src/game
+import src/solver
 
 def simpleBoard1() = buildBoard(5, 5, Cons(XY(2,2),Cons(XY(4,4),Nil())))
+def simpleBoard2(): Board = {
+  var board = buildBoard(3, 3, Cons(XY(0,0),Nil()))
+  try {board.revealCell(XY(1,1))}
+  with GameOver {board}
+}
 
 /**
 F 2 F
@@ -18,8 +24,13 @@ F 2 2 2 2 ?
 1 1 0 0 2 ?
 0 0 0 0 1 ?
 **/
-def complexBoard2() = buildBoard(4, 6, Cons(XY(0,1),Cons(XY(2,0),Cons(XY(3,0),Cons(XY(5,1),Cons(XY(5,3),Nil()))))))
+def complexBoard2() = {
+  var board = buildBoard(4, 6, Cons(XY(0,1),Cons(XY(2,0),Cons(XY(3,0),Cons(XY(5,1),Cons(XY(5,3),Nil()))))))
+  try {board.revealCell(XY(0,3))}
+  with GameOver {board}
+}
 
+// ----------------------------- GAME ---------------------------
 def testFlagCell() = {
   val board = simpleBoard1()
   val xy = XY(1,1)
@@ -64,6 +75,29 @@ def testCollectWithXY() = {
   do assert(res, "collectWithXY failed to collect the correct cells")
 }
 
+// ---------------------- SOLVER -----------------------------
+def testSolve() = {
+  val board = simpleBoard2()
+  val moves = board.solve()
+  do assert(moves.size == 0, "Solver should return no moves")
+}
+
+def testUnrevealedNeighbors() = {
+  val board = simpleBoard2()
+  val neighbors = unrevealedNeighbors(board, XY(1, 1))
+  do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
+  do assert(neighbors.any(){xy => xy == XY(0, 0)}, "Should include top-left neighbor")
+  do assert(neighbors.any(){xy => xy == XY(2, 2)}, "Should include bottom-right neighbor")
+}
+
+def testRemoveMine() = {
+  var board = simpleBoard2()
+  board = removeMine(board, XY(0, 0))
+  do assert(board.getCell(XY(0, 0)) == Revealed(0), "Bomb revealed")
+  do assert(board.getCell(XY(0, 1)) == Hidden(false, false), "Hidden cells stay hidden")
+  do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
+}
+
 def testSolverSimple() = {
   val board = simpleBoard1()
   do assert(0 == 1, "todo")
@@ -76,15 +110,18 @@ def testSolverComplex() = {
 
 def runTests() = {
   println("Running tests...")
-  val suiteName = "Fairsweeper"
-  suite(suiteName){
+  suite("Fairsweeper Game") {
     test("FlagCell"){testFlagCell()}
     test("RevealCell"){testRevealCell()}
     test("AdjacentMines"){testCountAdjacentMines()}
     test("CollectCells"){testCollectWithXY()}
     }
+  suite("Solver") {
+    test("NoSureMove"){testSolve()}
+    test("UnrevealedNeighbors"){testUnrevealedNeighbors()}
+    test("RemoveMine"){testRemoveMine()}
+  }
   println("All tests passed!")
 }
 
 def main() = runTests()
-

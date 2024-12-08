@@ -1,2 +1,59 @@
 import src/game
 
+def solve(board: Board): List[XY] = {
+  var board = board
+  var amt_mines = board.mines
+  var found_bomb = true
+  var numbers = board.collectWithXY() {
+    case Revealed(count) and count > 0 => true
+    case _ => false
+  }
+
+  while (found_bomb and amt_mines > 0) {
+    found_bomb = false
+    numbers = numbers.map() {
+      case (xy, _) => (xy, board.getCell(xy))
+    }
+    numbers.foreach() {
+      case (xy, Revealed(count)) =>
+        val unrvNeighbors = board.unrevealedNeighbors(xy)
+        if (unrvNeighbors.size() == count) unrvNeighbors.foreach() {
+          xy => board = board.removeMine(xy)
+          amt_mines = amt_mines - 1
+          found_bomb = true
+        }
+      case _ => ()
+    }
+  }
+
+  var moves: List[XY] = empty()
+  numbers.foreach() {
+    case (xy, Revealed(count)) and count == 0 =>
+      val unrvNeighbors = board.unrevealedNeighbors(xy)
+      moves = moves.append(unrvNeighbors)
+    case _ => ()
+  }
+  moves
+}
+
+def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
+  var acc: List[XY] = empty()
+  board.neighbors(xy).foreach() {xy =>
+    board.getCell(xy) match {
+      case Hidden(_, _) => acc = acc.append(Cons(xy,Nil()))
+      case _ => ()
+    }
+  }
+  acc
+}
+
+def removeMine(board: Board, xy: XY): Board = {
+  board.setCell(xy, Revealed(0))
+  board.neighbors(xy).foreach() {xy =>
+    board.getCell(xy) match {
+      case Revealed(count) => board.setCell(xy, Revealed(count - 1))
+      case _ => ()
+    }
+  }
+  board
+}

@@ -11,14 +11,17 @@ type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(adjacentMines: Int)
 }
-
-record XY(x: Int, y: Int)
-
 def infixEq(left: Cell, right: Cell): Bool =
   if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
     l1 == r1 && l2 == r2
   } else if (left is Revealed(a) and right is Revealed(b)) {
     a == b
+  } else false
+
+record XY(x: Int, y: Int)
+def infixEq(left: XY, right: XY): Bool =
+  if (left is XY(x1, y1) and right is XY(x2, y2)) {
+    x1 == x2 && y1 == y2
   } else false
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
