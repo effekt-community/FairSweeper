@@ -52,12 +52,10 @@ def solve(board: Board): List[XY] / {QuickMoves} = {
 }
 
 def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
-  var shared: List[XY] = empty()
   l1.collect() {xy1 =>
     if (l2.any() {xy2 => xy2 == xy1}) Some(xy1)
     else None()
   }
-  shared
 }
 
 def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
