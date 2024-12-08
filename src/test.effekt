@@ -80,7 +80,7 @@ def testSolve() = {
   val board = simpleBoard2()
   var moves: List[XY] = empty()
   try {
-    moves = board.solve()
+    moves = board.getMoves()
     ()
   }
   with QuickMoves {_ => ()}
@@ -97,7 +97,7 @@ def testUnrevealedNeighbors() = {
 
 def testRemoveMine() = {
   var board = simpleBoard2()
-  board = removeMine(board, XY(0, 0))
+  board.removeMine(XY(0, 0))
   do assert(board.getCell(XY(0, 0)) == Revealed(0), "Bomb revealed")
   do assert(board.getCell(XY(0, 1)) == Hidden(false, false), "Hidden cells stay hidden")
   do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")

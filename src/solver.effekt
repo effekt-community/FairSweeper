@@ -2,7 +2,7 @@ import src/game
 
 effect QuickMoves(moves: List[XY]): Unit
 
-def solve(board: Board): List[XY] / {QuickMoves} = {
+def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var board = board
   var amt_mines = board.mines
   var found_bomb = true
@@ -20,7 +20,7 @@ def solve(board: Board): List[XY] / {QuickMoves} = {
       case (xy, Revealed(count)) =>
         val unrvNeighbors = board.unrevealedNeighbors(xy)
         if (unrvNeighbors.size() == count) unrvNeighbors.foreach() {
-          xy => board = board.removeMine(xy)
+          xy => board.removeMine(xy)
           amt_mines = amt_mines - 1
           found_bomb = true
         }
@@ -39,16 +39,32 @@ def solve(board: Board): List[XY] / {QuickMoves} = {
   do QuickMoves(moves)
 
   // if number is larger and has same neighbors except difference then non shared neighbors are bombs
-  numbers.foreach() {
-    case (xy, Revealed(count)) =>
-      val neighbors = board.neighbors(xy)
-      neighbors.foreach() {xy =>
-        board.getCell(xy)
-        <>
-      }
-    case _ => ()
+  while (found_bomb and amt_mines > 0) {
+    numbers.foreach() {
+      case (xy, _) =>
+        val mines = board.detectNbMinesByDifference(xy)
+        board.removeMines(mines)
+        ()
+    }
   }
   moves
+}
+
+def detectNbMinesByDifference(board: Board, xy: XY): List[XY] = {
+  val count = if (board.getCell(xy) is Revealed(c)) c else 0
+  var mines: List[XY] = empty()
+  val nb = board.neighbors(xy)
+  nb.foreach() { xy2 =>
+    val comp_cell = board.getCell(xy2)
+    comp_cell match {
+      case Revealed(c) and c > count =>
+        val nb2 = board.neighbors(xy2)
+        val diff = nb2.getDifference(nb)
+        if (diff.size() <= c - count) mines = mines.append(diff)
+      case _ => ()
+    }
+  }
+  mines
 }
 
 def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
@@ -68,7 +84,7 @@ def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
 }
 
 def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
-  board.neighbors(xy).collect() {xy =>
+  board.neighbors(xy).collect() { xy =>
     board.getCell(xy) match {
       case Hidden(_, _) => Some(xy)
       case _ => None()
@@ -76,13 +92,18 @@ def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
   }
 }
 
-def removeMine(board: Board, xy: XY): Board = {
-  board.setCell(xy, Revealed(0))
-  board.neighbors(xy).foreach() {xy =>
+def removeMine(board: Board, mine: XY): Unit = {
+  board.setCell(mine, Revealed(0))
+  board.neighbors(mine).foreach() { xy =>
     board.getCell(xy) match {
       case Revealed(count) => board.setCell(xy, Revealed(count - 1))
       case _ => ()
     }
   }
-  board
+}
+
+def removeMines(board: Board, mines: List[XY]): Unit = {
+  mines.foreach() {xy =>
+    board.removeMine(xy)
+  }
 }
