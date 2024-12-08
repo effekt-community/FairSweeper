@@ -1,6 +1,8 @@
 import src/game
 
-def solve(board: Board): List[XY] = {
+effect QuickMoves(moves: List[XY]): Unit
+
+def solve(board: Board): List[XY] / {QuickMoves} = {
   var board = board
   var amt_mines = board.mines
   var found_bomb = true
@@ -27,24 +29,53 @@ def solve(board: Board): List[XY] = {
   }
 
   var moves: List[XY] = empty()
-  numbers.foreach() {
-    case (xy, Revealed(count)) and count == 0 =>
+  numbers = numbers.collect() {
+    case (xy, Revealed(count)) and count > 0 => Some((xy, Revealed(count)))
+    case (xy, _) =>
       val unrvNeighbors = board.unrevealedNeighbors(xy)
       moves = moves.append(unrvNeighbors)
+      None()
+  }
+  do QuickMoves(moves)
+
+  // if number is larger and has same neighbors except difference then non shared neighbors are bombs
+  numbers.foreach() {
+    case (xy, Revealed(count)) =>
+      val neighbors = board.neighbors(xy)
+      neighbors.foreach() {xy =>
+        board.getCell(xy)
+        <>
+      }
     case _ => ()
   }
   moves
 }
 
+def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
+  var shared: List[XY] = empty()
+  l1.collect() {xy1 =>
+    val eq = l2.collect() {xy2 =>
+      if (xy1 == xy2) Some(xy1)
+      else None()
+    }
+    eq.headOption()
+  }
+  shared
+}
+
+// def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
+//   var diff: List[XY] = empty()
+//   val intersection = l1.getIntersection(l2)
+//   intersection.foreach
+// }
+
 def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
-  var acc: List[XY] = empty()
-  board.neighbors(xy).foreach() {xy =>
+  board.neighbors(xy).collect() {xy =>
     board.getCell(xy) match {
-      case Hidden(_, _) => acc = acc.append(Cons(xy,Nil()))
-      case _ => ()
+      case Hidden(_, _) => Some(xy)
+      case _ => None()
     }
   }
-  acc
 }
 
 def removeMine(board: Board, xy: XY): Board = {

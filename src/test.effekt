@@ -78,7 +78,12 @@ def testCollectWithXY() = {
 // ---------------------- SOLVER -----------------------------
 def testSolve() = {
   val board = simpleBoard2()
-  val moves = board.solve()
+  var moves: List[XY] = empty()
+  try {
+    moves = board.solve()
+    ()
+  }
+  with QuickMoves {_ => ()}
   do assert(moves.size == 0, "Solver should return no moves")
 }
 
