@@ -38,7 +38,6 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
         None()
       case _ => None()
     }
-    println(numbers.size)
     do QuickMoves(moves)
 
     numbers.foreach() {

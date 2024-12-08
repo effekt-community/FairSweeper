@@ -58,7 +58,7 @@ def testSolve() = {
     moves = board.getMoves()
     ()
   }
-  with QuickMoves {_ => ()}
+  with QuickMoves {_ => resume(())}
   do assert(moves.size == 0, "Solver should return no moves")
 }
 
@@ -90,8 +90,8 @@ def testSolverComplex() = {
     moves = board.getMoves()
     ()
   }
-  with QuickMoves {_ => ()}
-  println(moves.size.show)
+  with QuickMoves {_ => resume(())}
+  // println(moves.size.show)
   do assert(moves.size == 1, "One possible move")
   do assert(moves.any{xy => xy == XY(1,2)}, "The move should be (1,2)")
 }
