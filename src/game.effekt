@@ -28,7 +28,7 @@ record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
 def collectWithXY(board: Board) {f: Cell => Bool}: List[(XY,Cell)] = {
   var acc: List[(XY,Cell)] = empty()
-  board.foreach() {(xy, cell) =>
+  board.foreach{ (xy, cell) =>
     if (f(cell)) acc = acc.append(Cons((xy, cell), Nil()))
   }
   acc
@@ -53,7 +53,7 @@ def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
     grid.set(rw, array(cols, Hidden(false, false)))
   }
   var board = Board(grid, rows, cols, mines.size())
-  mines.foreach() {cell => board.setCell(cell, Hidden(true, false))}
+  mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
   return board
 }
 
@@ -110,8 +110,8 @@ def revealCell(board: Board, xy: XY): Board / {GameOver} = {
 
 def countAdjacentMines(board: Board, xy: XY): Int = {
   var counter = 0
-  board.neighbors(xy).foreach {
-    cel => if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
+  board.neighbors(xy).foreach{cel =>
+    if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
   }
   counter
 }

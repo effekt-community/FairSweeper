@@ -5,47 +5,62 @@ effect QuickMoves(moves: List[XY]): Unit
 def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var board = board
   var amt_mines = board.mines
-  var found_bomb = true
+  var foundMines: List[XY] = empty()
+  var moves: List[XY] = empty()
   var numbers = board.collectWithXY() {
     case Revealed(count) and count > 0 => true
     case _ => false
   }
 
-  while (found_bomb and amt_mines > 0) {
-    found_bomb = false
-    numbers = numbers.map() {
+  var foundMine = true
+  while (foundMine and amt_mines > 0) {
+    foundMine = false
+    numbers = numbers.map{
       case (xy, _) => (xy, board.getCell(xy))
     }
     numbers.foreach() {
       case (xy, Revealed(count)) =>
         val unrvNeighbors = board.unrevealedNeighbors(xy)
-        if (unrvNeighbors.size() == count) unrvNeighbors.foreach() {
-          xy => board.removeMine(xy)
+        if (unrvNeighbors.size() == count) unrvNeighbors.foreach{xy =>
+          foundMines = foundMines.append(Cons(xy,Nil()))
+          board.removeMine(xy)
           amt_mines = amt_mines - 1
-          found_bomb = true
+          foundMine = true
         }
       case _ => ()
     }
-  }
 
-  var moves: List[XY] = empty()
-  numbers = numbers.collect() {
-    case (xy, Revealed(count)) and count > 0 => Some((xy, Revealed(count)))
-    case (xy, _) =>
-      val unrvNeighbors = board.unrevealedNeighbors(xy)
-      moves = moves.append(unrvNeighbors)
-      None()
-  }
-  do QuickMoves(moves)
+    numbers = numbers.collect() {
+      case (xy, Revealed(count)) and count > 0 => Some((xy, Revealed(count)))
+      case (xy, _) =>
+        val unrvNeighbors = board.unrevealedNeighbors(xy)
+        moves = moves.append(unrvNeighbors)
+        None()
+    }
+    do QuickMoves(moves)
 
-  // if number is larger and has same neighbors except difference then non shared neighbors are bombs
-  while (found_bomb and amt_mines > 0) {
     numbers.foreach() {
       case (xy, _) =>
         val mines = board.detectNbMinesByDifference(xy)
-        board.removeMines(mines)
-        ()
+        if (mines.size() > 0)
+          foundMines = foundMines.append(mines)
+          foundMine = true
+          board.removeMines(mines)
     }
+  }
+
+  if (amt_mines == 0) {
+    moves = empty()
+    board.foreach() { (xy, cell) =>
+      cell match {
+        case Hidden(_, _) => moves = moves.append(Cons(xy,Nil()))
+        case _ => ()
+      }
+    }
+  }
+  else numbers.foreach() {
+    case (xy, Hidden(_,_)) => moves = moves.append(Cons(xy,Nil()))
+    case _ => ()
   }
   moves
 }
@@ -54,7 +69,7 @@ def detectNbMinesByDifference(board: Board, xy: XY): List[XY] = {
   val count = if (board.getCell(xy) is Revealed(c)) c else 0
   var mines: List[XY] = empty()
   val nb = board.neighbors(xy)
-  nb.foreach() { xy2 =>
+  nb.foreach{ xy2 =>
     val comp_cell = board.getCell(xy2)
     comp_cell match {
       case Revealed(c) and c > count =>
@@ -68,8 +83,8 @@ def detectNbMinesByDifference(board: Board, xy: XY): List[XY] = {
 }
 
 def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
-  l1.collect() {xy1 =>
-    if (l2.any() {xy2 => xy2 == xy1}) Some(xy1)
+  l1.collect{xy1 =>
+    if (l2.any{xy2 => xy2 == xy1}) Some(xy1)
     else None()
   }
 }
@@ -77,14 +92,14 @@ def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
 def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
   var diff: List[XY] = empty()
   val intersection = l1.getIntersection(l2)
-  l1.collect() {xyl =>
-    if (not(intersection.any() {xyi => xyi == xyl})) Some(xyl)
+  l1.collect{xyl =>
+    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
     else None()
   }
 }
 
 def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
-  board.neighbors(xy).collect() { xy =>
+  board.neighbors(xy).collect{ xy =>
     board.getCell(xy) match {
       case Hidden(_, _) => Some(xy)
       case _ => None()
@@ -94,7 +109,7 @@ def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
 
 def removeMine(board: Board, mine: XY): Unit = {
   board.setCell(mine, Revealed(0))
-  board.neighbors(mine).foreach() { xy =>
+  board.neighbors(mine).foreach{ xy =>
     board.getCell(xy) match {
       case Revealed(count) => board.setCell(xy, Revealed(count - 1))
       case _ => ()
