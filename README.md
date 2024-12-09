@@ -14,6 +14,7 @@
   - [Repository structure](#repository-structure)
   - [CI](#ci)
   - [Used Template](#used-template)
+  - [Related](#related)
 
 ---
 
@@ -121,3 +122,6 @@ Two GitHub Actions are set up:
 
 ## Used Template
 [Effekt Template](https://github.com/jiribenes/effekt-template)
+
+## Related
+- [JS Fairsweeper](https://github.com/pwmarcz/kaboom/tree/master)
