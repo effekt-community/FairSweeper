@@ -1,4 +1,5 @@
 import src/game
+import src/utils
 
 effect QuickMoves(moves: List[XY]): Unit
 

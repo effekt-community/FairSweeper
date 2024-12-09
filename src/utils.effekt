@@ -1,0 +1,48 @@
+import src/game
+
+// Cell
+def infixEq(left: Cell, right: Cell): Bool =
+  if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
+    l1 == r1 && l2 == r2
+  } else if (left is Revealed(a) and right is Revealed(b)) {
+    a == b
+  } else false
+
+// XY
+def infixEq(left: XY, right: XY): Bool =
+  if (left is XY(x1, y1) and right is XY(x2, y2)) {
+    x1 == x2 && y1 == y2
+  } else false
+
+def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
+
+// Board
+def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
+  board.collect{ (xy, cell) =>
+    if (f(cell)) Some(xy)
+    else None()
+  }
+}
+
+def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit= {
+  try {
+    val x = do Offset(0, board.cols)
+    val y = do Offset(0, board.rows)
+    val xy = XY(x,y)
+    val cell = board.getCell(xy)
+    f(xy, cell)
+  } with Offset {(s,e) =>
+    each(s,e) {v => resume(v)}
+  }
+}
+
+def collect[A](board: Board) {f: (XY, Cell) => Option[A]}: List[A] = {
+  var acc: List[A] = empty()
+  board.foreach{ (a,b) =>
+    f(a,b) match {
+      case Some(v) => acc = Cons(v,acc)
+      case None()  => ()
+    }
+  }
+  acc.reverse
+}

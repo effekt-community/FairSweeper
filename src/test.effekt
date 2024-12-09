@@ -4,6 +4,7 @@ import test
 import src/game
 import src/solver
 import src/boards
+import src/utils
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
