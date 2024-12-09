@@ -29,11 +29,10 @@ def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
 def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
-  var acc: List[XY] = empty()
-  board.foreach{ (xy, cell) =>
-    if (f(cell)) acc = acc.append(Cons((xy), Nil()))
+  board.collect{ (xy, cell) =>
+    if (f(cell)) Some(xy)
+    else None()
   }
-  acc
 }
 
 def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit= {
@@ -46,6 +45,17 @@ def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit= {
   } with Offset {(s,e) =>
     each(s,e) {v => resume(v)}
   }
+}
+
+def collect[A](board: Board) {f: (XY, Cell) => Option[A]}: List[A] = {
+  var acc: List[A] = empty()
+  board.foreach{ (a,b) =>
+    f(a,b) match {
+      case Some(v) => acc = Cons(v,acc)
+      case None()  => ()
+    }
+  }
+  acc.reverse
 }
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
