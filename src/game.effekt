@@ -1,8 +1,8 @@
 module src/game
 
-effect Reveal(cell: (Int,Int)): Board
+effect Reveal(cell: (Int,Int)): Unit
 effect GameOver(): Unit
-effect Flag(cell: (Int,Int)): Board
+effect Flag(cell: (Int,Int)): Unit
 
 // for resuming with each value with each()
 effect Offset(start: Int, end: Int): Int

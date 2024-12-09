@@ -11,12 +11,15 @@ def main() = {
     playGame(board)
   } with Reveal { case (row,col) =>
     println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    try {resume(revealCell(board, XY(row, col)))}
+    try {
+      revealCell(board, XY(row, col))
+      resume(())}
     with GameOver {println("Game Over! You hit a mine.")}
   }
   with Flag { case (row, col) =>
     println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    resume(flagCell(board, XY(row, col)))
+    flagCell(board, XY(row, col))
+    resume(())
   }
   println("over")
 }
@@ -28,12 +31,10 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
     printBoard(board, false)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     println(clear())
-    board = input.split(" ") match {
+    input.split(" ") match {
       case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
       case Cons("f", Cons(x, Cons(y, _))) => do Flag((y.toInt, x.toInt))
-      case _ =>
-        println("Invalid input. Try again.")
-        board
+      case _ => println("Invalid input. Try again.")
     }
   }
 }
