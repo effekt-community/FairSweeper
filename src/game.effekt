@@ -1,7 +1,7 @@
 module src/game
 
 effect Reveal(cell: (Int,Int)): Board
-effect GameOver(): Board
+effect GameOver(): Unit
 effect Flag(cell: (Int,Int)): Board
 
 // for resuming with each value with each()
@@ -23,6 +23,8 @@ def infixEq(left: XY, right: XY): Bool =
   if (left is XY(x1, y1) and right is XY(x2, y2)) {
     x1 == x2 && y1 == y2
   } else false
+
+def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
@@ -94,7 +96,7 @@ def flagCell(board: Board, xy: XY): Board / {} = {
   board
 }
 
-def revealCell(board: Board, xy: XY): Board / {GameOver} = {
+def revealCell(board: Board, xy: XY): Unit / {GameOver} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
@@ -102,9 +104,9 @@ def revealCell(board: Board, xy: XY): Board / {GameOver} = {
       else {
         val adjMines = countAdjacentMines(board, xy)
         board.setCell(xy, Revealed(adjMines))
-        if (adjMines == 0) revealAdjacentCells(board, xy) else board
+        if (adjMines == 0) revealAdjacentCells(board, xy)
       }
-    case _ => board
+    case _ => ()
   }
 }
 
@@ -131,8 +133,6 @@ def neighbors(board: Board, cell: XY): List[XY] = {
   list.reverse
 }
 
-def revealAdjacentCells(board: Board, xy: XY): Board / {GameOver} = {
-  board.neighbors(xy).foldLeft(board) {
-    (b, xy) => revealCell(b, xy)
-  }
+def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver} = {
+  board.neighbors(xy).foreach{ xy => board.revealCell(xy) }
 }

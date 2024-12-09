@@ -5,26 +5,32 @@ effect QuickMoves(moves: List[XY]): Unit
 def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var board = board
   var amtMines = board.mines
+  var foundMine = true
   var foundMines: List[XY] = empty()
   var moves: List[XY] = empty()
   var numbers = board.getXY{
     case Revealed(count) and count > 0 => true
     case _ => false
   }
+  def remMines(mines: List[XY]) = {
+    amtMines = amtMines - mines.size()
+    foundMines = foundMines.append(mines)
+    foundMine = true
+    board.removeMines(mines)
+  }
 
-  var foundMine = true
   while (foundMine and amtMines > 0) {
     foundMine = false
     numbers.foreach() {xy =>
       val unrvNeighbors = board.unrevealedNeighbors(xy)
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
-      if (unrvNeighbors.size() == count) unrvNeighbors.foreach{xy2 =>
-        foundMines = foundMines.append(Cons(xy,Nil()))
-        board.removeMine(xy2)
-        amtMines = amtMines - 1
-        foundMine = true
+      if (unrvNeighbors.size() == count) remMines(unrvNeighbors)
+      println(xy.show ++ unrvNeighbors.size.show ++ ": count " ++ count.show)
+      unrvNeighbors.foreach{
+        xy => println(xy.show)
       }
     }
+    // println(numbers.size.show)
 
     numbers = numbers.collect() {xy =>
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
@@ -36,14 +42,11 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
         case _ => Some(xy)
       }
     }
+    // println(numbers.size.show)
     do QuickMoves(moves)
     numbers.foreach() {xy =>
       val mines = board.detectNbMinesByDifference(xy)
-      if (mines.size() > 0) {
-        foundMines = foundMines.append(mines)
-        foundMine = true
-        board.removeMines(mines)
-      }
+      if (mines.size() > 0) remMines(mines)
     }
   }
 
@@ -115,7 +118,5 @@ def removeMine(board: Board, mine: XY): Unit = {
 }
 
 def removeMines(board: Board, mines: List[XY]): Unit = {
-  mines.foreach() {xy =>
-    board.removeMine(xy)
-  }
+  mines.foreach{ xy => board.removeMine(xy) }
 }
