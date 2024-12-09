@@ -123,10 +123,10 @@ def neighbors(board: Board, cell: XY): List[XY] = {
   try {
     val dr = do Offset(-1, 2)
     val dc = do Offset(-1, 2)
-    val nr = cell.x + dr
-    val nc = cell.y + dc
-    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dr,dc),(0,0)))) list =
-      Cons(XY(nc,nr),list)
+    val nr = cell.y + dr
+    val nc = cell.x + dc
+    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dc,dr),(0,0))))
+      list = Cons(XY(nc,nr),list)
   } with Offset {(s,e) =>
     each(s,e){v => resume(v)}
   }

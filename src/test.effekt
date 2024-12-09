@@ -62,9 +62,9 @@ def testSolve() = {
   do assert(moves.size == 0, "Solver should return no moves")
 }
 
-def testUnrevealedNeighbors() = {
+def testHiddenNeighbors() = {
   val board = simpleBoard2()
-  val neighbors = unrevealedNeighbors(board, XY(1, 1))
+  val neighbors = hiddenNeighbors(board, XY(1, 1))
   do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
   do assert(neighbors.any{xy => xy == XY(0, 0)}, "Should include top-left neighbor")
   do assert(neighbors.any{xy => xy == XY(2, 2)}, "Should include bottom-right neighbor")
@@ -104,7 +104,7 @@ def runTests() = {
     }
   suite("Solver") {
     test("NoSureMove"){testSolve()}
-    test("UnrevealedNeighbors"){testUnrevealedNeighbors()}
+    test("UnrevealedNeighbors"){testHiddenNeighbors()}
     test("RemoveMine"){testRemoveMine()}
     test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
     test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}

@@ -22,27 +22,25 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
   while (foundMine and amtMines > 0) {
     foundMine = false
     numbers.foreach() {xy =>
-      val unrvNeighbors = board.unrevealedNeighbors(xy)
+      val hiddenNeighbors = board.hiddenNeighbors(xy)
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
-      if (unrvNeighbors.size() == count) remMines(unrvNeighbors)
-      println(xy.show ++ unrvNeighbors.size.show ++ ": count " ++ count.show)
-      unrvNeighbors.foreach{
-        xy => println(xy.show)
-      }
+      if (hiddenNeighbors.size() == count) remMines(hiddenNeighbors)
+      // println(xy.show ++ hiddenNeighbors.size.show ++ ": count " ++ count.show)
+      // hiddenNeighbors.foreach{xy => println(xy.show)}
     }
-    // println(numbers.size.show)
+    println(numbers.size.show)
 
     numbers = numbers.collect() {xy =>
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
       count match {
         case 0 =>
-          val unrvNeighbors = board.unrevealedNeighbors(xy)
-          moves = moves.append(unrvNeighbors)
+          val hiddenNeighbors = board.hiddenNeighbors(xy)
+          moves = moves.append(hiddenNeighbors)
           None()
         case _ => Some(xy)
       }
     }
-    // println(numbers.size.show)
+    println(numbers.size.show)
     do QuickMoves(moves)
     numbers.foreach() {xy =>
       val mines = board.detectNbMinesByDifference(xy)
@@ -98,7 +96,7 @@ def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
   }
 }
 
-def unrevealedNeighbors(board: Board, xy: XY): List[XY] = {
+def hiddenNeighbors(board: Board, xy: XY): List[XY] = {
   board.neighbors(xy).collect{ xy =>
     board.getCell(xy) match {
       case Hidden(_, _) => Some(xy)
