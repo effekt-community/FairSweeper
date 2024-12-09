@@ -7,7 +7,7 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var amt_mines = board.mines
   var foundMines: List[XY] = empty()
   var moves: List[XY] = empty()
-  var numbers = board.collectWithXY() {
+  var numbers = board.getXY{
     case Revealed(count) and count > 0 => true
     case _ => false
   }
@@ -15,38 +15,34 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var foundMine = true
   while (foundMine and amt_mines > 0) {
     foundMine = false
-    numbers = numbers.map{
-      case (xy, _) => (xy, board.getCell(xy))
-    }
-    numbers.foreach() {
-      case (xy, Revealed(count)) =>
-        val unrvNeighbors = board.unrevealedNeighbors(xy)
-        if (unrvNeighbors.size() == count) unrvNeighbors.foreach{xy =>
-          foundMines = foundMines.append(Cons(xy,Nil()))
-          board.removeMine(xy)
-          amt_mines = amt_mines - 1
-          foundMine = true
-        }
-      case _ => ()
+    numbers.foreach() {xy =>
+      val unrvNeighbors = board.unrevealedNeighbors(xy)
+      val count = if (board.getCell(xy) is Revealed(c)) c else 0
+      if (unrvNeighbors.size() == count) unrvNeighbors.foreach{xy2 =>
+        foundMines = foundMines.append(Cons(xy,Nil()))
+        board.removeMine(xy2)
+        amt_mines = amt_mines - 1
+        foundMine = true
+      }
     }
 
-    numbers = numbers.collect() {
-      case (xy, Revealed(count)) and count > 0 => Some((xy, Revealed(count)))
-      case (xy, Revealed(0)) =>
-        val unrvNeighbors = board.unrevealedNeighbors(xy)
-        moves = moves.append(unrvNeighbors)
-        None()
-      case _ => None()
+    numbers = numbers.collect() {xy =>
+      val count = if (board.getCell(xy) is Revealed(c)) c else 0
+      count match {
+        case 0 =>
+          val unrvNeighbors = board.unrevealedNeighbors(xy)
+          moves = moves.append(unrvNeighbors)
+          None()
+        case _ => Some(xy)
+      }
     }
     do QuickMoves(moves)
-
-    numbers.foreach() {
-      case (xy, _) =>
-        val mines = board.detectNbMinesByDifference(xy)
-        if (mines.size() > 0)
-          foundMines = foundMines.append(mines)
-          foundMine = true
-          board.removeMines(mines)
+    numbers.foreach() {xy =>
+      val mines = board.detectNbMinesByDifference(xy)
+      if (mines.size() > 0)
+        foundMines = foundMines.append(mines)
+        foundMine = true
+        board.removeMines(mines)
     }
   }
 
@@ -59,9 +55,8 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
       }
     }
   }
-  else numbers.foreach() {
-    case (xy, Hidden(_,_)) => moves = moves.append(Cons(xy,Nil()))
-    case _ => ()
+  else numbers.foreach() {xy =>
+    if (board.getCell(xy) is Hidden(_,_)) moves = moves.append(Cons(xy,Nil()))
   }
   moves
 }

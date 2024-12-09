@@ -26,10 +26,10 @@ def infixEq(left: XY, right: XY): Bool =
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
-def collectWithXY(board: Board) {f: Cell => Bool}: List[(XY,Cell)] = {
-  var acc: List[(XY,Cell)] = empty()
+def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
+  var acc: List[XY] = empty()
   board.foreach{ (xy, cell) =>
-    if (f(cell)) acc = acc.append(Cons((xy, cell), Nil()))
+    if (f(cell)) acc = acc.append(Cons((xy), Nil()))
   }
   acc
 }
@@ -75,12 +75,12 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
 
 def getCell(board: Board, xy: XY): Cell = {
   with on[OutOfBounds].panic
-  return board.grid.get(xy.x).get(xy.y)
+  return board.grid.get(xy.y).get(xy.x)
 }
 
 def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
   with on[OutOfBounds].panic
-  if (xy is XY(row,col)) board.grid.get(row).set(col, new_val)
+  board.grid.get(xy.y).set(xy.x, new_val)
 }
 
 def flagCell(board: Board, xy: XY): Board / {} = {
@@ -124,7 +124,7 @@ def neighbors(board: Board, cell: XY): List[XY] = {
     val nr = cell.x + dr
     val nc = cell.y + dc
     if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dr,dc),(0,0)))) list =
-      Cons(XY(nr,nc),list)
+      Cons(XY(nc,nr),list)
   } with Offset {(s,e) =>
     each(s,e){v => resume(v)}
   }

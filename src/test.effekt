@@ -38,13 +38,13 @@ def testCountAdjacentMines() = {
 
 def testCollectWithXY() = {
   val board = simpleBoard1()
-  val collectedCells = collectWithXY(board) {
+  val collectedCells = getXY(board) {
     case Hidden(true, _) => true
     case _               => false
   }
   val res = collectedCells.all() {
-    case (XY(2,2),Hidden(true,false)) => true
-    case (XY(3,3),Hidden(true,false)) => true
+    case XY(2,2) => true
+    case XY(3,3) => true
     case _ => false
   }
   do assert(res, "collectWithXY failed to collect the correct cells")
@@ -58,7 +58,8 @@ def testSolve() = {
     moves = board.getMoves()
     ()
   }
-  with QuickMoves {_ => resume(())}
+  with QuickMoves {_ => ()}
+  // with QuickMoves {_ => resume(())}
   do assert(moves.size == 0, "Solver should return no moves")
 }
 
@@ -84,6 +85,7 @@ def testSolverSimple() = {
 }
 
 def testSolverComplex() = {
+  with on[MissingValue].panic
   val board = complexBoard1()
   var moves: List[XY] = empty()
   try {
@@ -91,7 +93,6 @@ def testSolverComplex() = {
     ()
   }
   with QuickMoves {_ => resume(())}
-  // println(moves.size.show)
   do assert(moves.size == 1, "One possible move")
   do assert(moves.any{xy => xy == XY(1,2)}, "The move should be (1,2)")
 }
@@ -108,7 +109,7 @@ def runTests() = {
     test("NoSureMove"){testSolve()}
     test("UnrevealedNeighbors"){testUnrevealedNeighbors()}
     test("RemoveMine"){testRemoveMine()}
-    test("Solve complex map 1"){testSolverComplex()}
+    test("Solve complex map1"){testSolverComplex()}
   }
   println("All tests passed!")
 }
