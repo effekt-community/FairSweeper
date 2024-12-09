@@ -21,14 +21,12 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
 
   while (foundMine and amtMines > 0) {
     foundMine = false
+    // simple solving
     numbers.foreach() {xy =>
       val hiddenNeighbors = board.hiddenNeighbors(xy)
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
       if (hiddenNeighbors.size() == count) remMines(hiddenNeighbors)
-      // println(xy.show ++ hiddenNeighbors.size.show ++ ": count " ++ count.show)
-      // hiddenNeighbors.foreach{xy => println(xy.show)}
     }
-    println(numbers.size.show)
 
     numbers = numbers.collect() {xy =>
       val count = if (board.getCell(xy) is Revealed(c)) c else 0
@@ -40,8 +38,8 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
         case _ => Some(xy)
       }
     }
-    println(numbers.size.show)
     do QuickMoves(moves)
+    // advanced solving
     numbers.foreach() {xy =>
       val mines = board.detectNbMinesByDifference(xy)
       if (mines.size() > 0) remMines(mines)
@@ -66,13 +64,13 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
 def detectNbMinesByDifference(board: Board, xy: XY): List[XY] = {
   val count = if (board.getCell(xy) is Revealed(c)) c else 0
   var mines: List[XY] = empty()
-  val nb = board.neighbors(xy)
-  nb.foreach{ xy2 =>
+  val nbs = board.neighbors(xy)
+  val hdnbs = board.hiddenNeighbors(xy)
+  nbs.foreach{ xy2 =>
     val comp_cell = board.getCell(xy2)
     comp_cell match {
       case Revealed(c) and c > count =>
-        val nb2 = board.neighbors(xy2)
-        val diff = nb2.getDifference(nb)
+        val diff = getDifference(board.hiddenNeighbors(xy2), hdnbs)
         if (diff.size() <= c - count) mines = mines.append(diff)
       case _ => ()
     }
@@ -91,7 +89,7 @@ def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
   var diff: List[XY] = empty()
   val intersection = l1.getIntersection(l2)
   l1.collect{xyl =>
-    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
+    if (not(intersection.any{xyi => xyi == xyl})) {println(xyl.show);Some(xyl)}
     else None()
   }
 }

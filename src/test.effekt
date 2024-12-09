@@ -78,6 +78,21 @@ def testRemoveMine() = {
   do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
 }
 
+def testIntersection() = {
+  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
+  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val intersection = l1.getIntersection(l2)
+  do assert(intersection.any{xy => xy == XY(0,1)}, "Intersection should be XY(0,1)")
+}
+
+def testDifference() = {
+  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
+  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val intersection = l1.getDifference(l2)
+  do assert(intersection.any{xy => xy == XY(0,0)}, "Difference should contain XY(0,0)")
+  do assert(intersection.any{xy => xy == XY(1,0)}, "Difference should contain XY(1,0)")
+}
+
 def testSolverSimple() = {
   val board = simpleBoard1()
   do assert(0 == 1, "todo")
@@ -103,9 +118,11 @@ def runTests() = {
     test("CollectCells"){testCollectWithXY()}
     }
   suite("Solver") {
-    test("NoSureMove"){testSolve()}
     test("UnrevealedNeighbors"){testHiddenNeighbors()}
     test("RemoveMine"){testRemoveMine()}
+    test("CalcIntersection"){testIntersection()}
+    test("CalcDifference"){testDifference()}
+    test("NoSureMove"){testSolve()}
     test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
     test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}
   }

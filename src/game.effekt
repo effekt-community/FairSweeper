@@ -118,13 +118,13 @@ def countAdjacentMines(board: Board, xy: XY): Int = {
   counter
 }
 
-def neighbors(board: Board, cell: XY): List[XY] = {
+def neighbors(board: Board, xy: XY): List[XY] = {
   var list: List[XY] = empty()
   try {
     val dr = do Offset(-1, 2)
     val dc = do Offset(-1, 2)
-    val nr = cell.y + dr
-    val nc = cell.x + dc
+    val nr = xy.y + dr
+    val nc = xy.x + dc
     if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dc,dr),(0,0))))
       list = Cons(XY(nc,nr),list)
   } with Offset {(s,e) =>
