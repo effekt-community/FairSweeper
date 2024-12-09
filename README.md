@@ -20,7 +20,7 @@
 ## Progress
 
 ### Week 2
-- See #22
+- See https://github.com/TheDying0fLight/FairSweeper/pull/22
 
 ### Week 1
 - some simple tests
