@@ -58,8 +58,8 @@ def testSolve() = {
     moves = board.getMoves()
     ()
   }
-  with QuickMoves {_ => ()}
-  // with QuickMoves {_ => resume(())}
+  // with QuickMoves {_ => ()}
+  with QuickMoves {_ => resume(())}
   do assert(moves.size == 0, "Solver should return no moves")
 }
 

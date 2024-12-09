@@ -4,7 +4,7 @@ effect QuickMoves(moves: List[XY]): Unit
 
 def getMoves(board: Board): List[XY] / {QuickMoves} = {
   var board = board
-  var amt_mines = board.mines
+  var amtMines = board.mines
   var foundMines: List[XY] = empty()
   var moves: List[XY] = empty()
   var numbers = board.getXY{
@@ -13,7 +13,7 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
   }
 
   var foundMine = true
-  while (foundMine and amt_mines > 0) {
+  while (foundMine and amtMines > 0) {
     foundMine = false
     numbers.foreach() {xy =>
       val unrvNeighbors = board.unrevealedNeighbors(xy)
@@ -21,7 +21,7 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
       if (unrvNeighbors.size() == count) unrvNeighbors.foreach{xy2 =>
         foundMines = foundMines.append(Cons(xy,Nil()))
         board.removeMine(xy2)
-        amt_mines = amt_mines - 1
+        amtMines = amtMines - 1
         foundMine = true
       }
     }
@@ -39,14 +39,15 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
     do QuickMoves(moves)
     numbers.foreach() {xy =>
       val mines = board.detectNbMinesByDifference(xy)
-      if (mines.size() > 0)
+      if (mines.size() > 0) {
         foundMines = foundMines.append(mines)
         foundMine = true
         board.removeMines(mines)
+      }
     }
   }
 
-  if (amt_mines == 0) {
+  if (amtMines == 0) {
     moves = empty()
     board.foreach() { (xy, cell) =>
       cell match {
