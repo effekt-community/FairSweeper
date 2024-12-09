@@ -93,6 +93,12 @@ def testDifference() = {
   do assert(intersection.any{xy => xy == XY(1,0)}, "Difference should contain XY(1,0)")
 }
 
+def testSubset() = {
+  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
+  val l2: List[XY] = Cons(XY(0,1),Nil())
+  do assert(l2.isSubset(l1), "l2 is a subset of l1")
+}
+
 def testSolverSimple() = {
   val board = simpleBoard1()
   do assert(0 == 1, "todo")
@@ -100,12 +106,10 @@ def testSolverSimple() = {
 
 def testSolverComplex(board: Board, amtMoves: Int, expMove: XY) = {
   var moves: List[XY] = empty()
-  try {
-    moves = board.getMoves()
-    ()
-  }
+  try {moves = board.getMoves(); ()}
   with QuickMoves {_ => resume(())}
-  do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move, but got " ++ moves.size.show)
+  moves.foreach{xy => println(xy.show)}
+  do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
   do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
 }
 
@@ -122,9 +126,12 @@ def runTests() = {
     test("RemoveMine"){testRemoveMine()}
     test("CalcIntersection"){testIntersection()}
     test("CalcDifference"){testDifference()}
+    test("IsSubset"){testSubset()}
     test("NoSureMove"){testSolve()}
     test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
     test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}
+    test("SolveComplexMap3"){testSolverComplex(complexBoard3(), 2, XY(0,2))}
+    test("SolveComplexMap4"){testSolverComplex(complexBoard4(), 2, XY(2,2))}
   }
   println("All tests passed!")
 }

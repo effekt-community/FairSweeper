@@ -56,3 +56,27 @@ def complexBoard2() = {
   with GameOver {()}
   board
 }
+
+/**
+0 0 0
+1 1 1
+? B ?
+**/
+def complexBoard3() = {
+  var board = buildBoard(3, 3, Cons(XY(1,2),Nil()))
+  try {board.revealCell(XY(0,0))}
+  with GameOver {()}
+  board
+}
+
+/**
+0 0 0 0
+1 1 1 1
+B ? ? B
+**/
+def complexBoard4() = {
+  var board = buildBoard(3, 4, Cons(XY(0,2),Cons(XY(3,2),Nil())))
+  try {board.revealCell(XY(0,0))}
+  with GameOver {()}
+  board
+}
