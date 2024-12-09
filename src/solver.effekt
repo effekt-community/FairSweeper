@@ -55,7 +55,6 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
       val newMoves = board.findMovesBySubset(xy)
       if (newMoves.size > 0) {
         moves = moves.append(newMoves)
-        // newMoves.foreach{xy => println(xy.show)}
         newMoves.foreach{ move => board.setCell(move, Revealed(-1)) }
         madeProgress = true
       }
