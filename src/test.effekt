@@ -108,7 +108,6 @@ def testSolverComplex(board: Board, amtMoves: Int, expMove: XY) = {
   var moves: List[XY] = empty()
   try {moves = board.getMoves(); ()}
   with QuickMoves {_ => resume(())}
-  moves.foreach{xy => println(xy.show)}
   do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
   do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
 }
