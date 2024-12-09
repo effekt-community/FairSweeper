@@ -20,13 +20,9 @@
 ## Progress
 
 ### Week 2
-
-- randomized bombs placement
-- show bomb locations
-- split program into multiple files
+- See #22
 
 ### Week 1
-
 - some simple tests
 - Board
 - CLI interactions
