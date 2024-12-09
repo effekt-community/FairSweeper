@@ -5,6 +5,7 @@
 - [FairSweeper](#fairsweeper)
   - [Table of contents](#table-of-contents)
   - [Progress](#progress)
+    - [Week 2](#week-2)
     - [Week 1](#week-1)
   - [Useful commands](#useful-commands)
     - [Effekt commands](#effekt-commands)
@@ -18,8 +19,10 @@
 
 ## Progress
 
-### Week 1
+### Week 2
+- See #22
 
+### Week 1
 - some simple tests
 - Board
 - CLI interactions

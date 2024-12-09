@@ -1,30 +1,14 @@
 module src/test
 
 import test
-import src/lib
-import src/main
+import src/game
+import src/solver
+import src/boards
 
-def createTestBoard(): Board = {
-  with on[OutOfBounds].panic()
-  val rows = 5
-  val cols = 5
-  val grid: Array[Array[Cell]] = allocate(rows)
-  each(0, rows) { r =>
-    val row: Array[Cell] = allocate(cols)
-    each(0, cols) { c =>
-      if ((r == 2 && c == 2) || (r == 4 && c == 4)) // Place mines at (2,2) and (4,4)
-        row.set(c, Hidden(true, false))
-      else
-        row.set(c, Hidden(false, false))
-    }
-    grid.set(r, row)
-  }
-  Board(grid, rows, cols, 2)
-}
-
+// ----------------------------- GAME ---------------------------
 def testFlagCell() = {
-  val board = createTestBoard()
-  val xy = (1,1)
+  val board = simpleBoard1()
+  val xy = XY(2,3)
   val updatedBoard = flagCell(board, xy)
   do assert(equals(updatedBoard.getCell(xy), Hidden(false,true)), "Flagging failed")
   val toggledBoard = flagCell(updatedBoard, xy)
@@ -32,14 +16,14 @@ def testFlagCell() = {
 }
 
 def testRevealCell() = {
-  val board = createTestBoard()
+  val board = simpleBoard1()
   try {
-    val revealedBoard = revealCell(board, (0, 0))
-    do assert(revealedBoard.getCell((0, 0)) match {
-      case Revealed(false, _) => true
-      case _                  => false
-    }, "Reveal failed for non-mine cell")
-    revealCell(board, (2, 2))
+    revealCell(board, XY(0, 0))
+    do assert(board.getCell(XY(0, 0)) match {
+      case Revealed(_) => true
+      case _           => false
+    }, "Reveal failed")
+    revealCell(board, XY(2, 2))
     do assert(false, "Reveal failed to trigger GameOver for mine")
   } with GameOver {
     println("GameOver correctly triggered")
@@ -47,21 +31,102 @@ def testRevealCell() = {
 }
 
 def testCountAdjacentMines() = {
-  val board = createTestBoard()
-  val count = countAdjacentMines(board, (3, 3))
+  val board = simpleBoard1()
+  val count = countAdjacentMines(board, XY(2, 3))
   do assert(count == 2, "Incorrect adjacent mine count")
+}
+
+def testCollectWithXY() = {
+  val board = simpleBoard1()
+  val collectedCells = getXY(board) {
+    case Hidden(true, _) => true
+    case _               => false
+  }
+  val res = collectedCells.all() {
+    case XY(2,2) => true
+    case XY(3,3) => true
+    case _ => false
+  }
+  do assert(res, "collectWithXY failed to collect the correct cells")
+}
+
+// ---------------------- SOLVER -----------------------------
+def testSolve() = {
+  val board = simpleBoard2()
+  var moves: List[XY] = empty()
+  try {
+    moves = board.getMoves()
+    ()
+  }
+  with QuickMoves {_ => resume(())}
+  do assert(moves.size == 0, "Solver should return no moves")
+}
+
+def testHiddenNeighbors() = {
+  val board = simpleBoard2()
+  val neighbors = hiddenNeighbors(board, XY(1, 1))
+  do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
+  do assert(neighbors.any{xy => xy == XY(0, 0)}, "Should include top-left neighbor")
+  do assert(neighbors.any{xy => xy == XY(2, 2)}, "Should include bottom-right neighbor")
+}
+
+def testRemoveMine() = {
+  var board = simpleBoard2()
+  board.removeMine(XY(0, 0))
+  do assert(board.getCell(XY(0, 0)) == Revealed(0), "Bomb revealed")
+  do assert(board.getCell(XY(0, 1)) == Hidden(false, false), "Hidden cells stay hidden")
+  do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
+}
+
+def testIntersection() = {
+  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
+  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val intersection = l1.getIntersection(l2)
+  do assert(intersection.any{xy => xy == XY(0,1)}, "Intersection should be XY(0,1)")
+}
+
+def testDifference() = {
+  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
+  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val intersection = l1.getDifference(l2)
+  do assert(intersection.any{xy => xy == XY(0,0)}, "Difference should contain XY(0,0)")
+  do assert(intersection.any{xy => xy == XY(1,0)}, "Difference should contain XY(1,0)")
+}
+
+def testSolverSimple() = {
+  val board = simpleBoard1()
+  do assert(0 == 1, "todo")
+}
+
+def testSolverComplex(board: Board, amtMoves: Int, expMove: XY) = {
+  var moves: List[XY] = empty()
+  try {
+    moves = board.getMoves()
+    ()
+  }
+  with QuickMoves {_ => resume(())}
+  do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move, but got " ++ moves.size.show)
+  do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
 }
 
 def runTests() = {
   println("Running tests...")
-  val suiteName = "Fairsweeper"
-  suite(suiteName){
+  suite("Fairsweeper Game") {
     test("FlagCell"){testFlagCell()}
     test("RevealCell"){testRevealCell()}
     test("AdjacentMines"){testCountAdjacentMines()}
+    test("CollectCells"){testCollectWithXY()}
     }
+  suite("Solver") {
+    test("UnrevealedNeighbors"){testHiddenNeighbors()}
+    test("RemoveMine"){testRemoveMine()}
+    test("CalcIntersection"){testIntersection()}
+    test("CalcDifference"){testDifference()}
+    test("NoSureMove"){testSolve()}
+    test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
+    test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}
+  }
   println("All tests passed!")
 }
 
 def main() = runTests()
-
