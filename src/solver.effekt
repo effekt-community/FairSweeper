@@ -89,7 +89,7 @@ def getDifference(l1: List[XY], l2: List[XY]): List[XY] = {
   var diff: List[XY] = empty()
   val intersection = l1.getIntersection(l2)
   l1.collect{xyl =>
-    if (not(intersection.any{xyi => xyi == xyl})) {println(xyl.show);Some(xyl)}
+    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
     else None()
   }
 }
