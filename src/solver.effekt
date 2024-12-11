@@ -3,12 +3,14 @@ import src/utils
 
 effect QuickMoves(moves: List[XY]): Unit
 
-def getMoves(board: Board): List[XY] / {QuickMoves} = {
+def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): List[XY] / {QuickMoves} = {
   var board = board
   var amtMines = board.mines
   var madeProgress = true
-  var foundMines: List[XY] = empty()
-  var moves: List[XY] = empty()
+  var foundMines = foundMines
+  board.removeMines(foundMines)
+  var moves = foundMoves
+  board.removeMoves(foundMoves)
   var numbers = board.getXY{
     case Revealed(count) and count > 0 => true
     case _ => false
@@ -26,7 +28,7 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
         case 0 =>
           val hiddenNeighbors = board.hiddenNeighbors(xy)
           moves = moves.append(hiddenNeighbors)
-          hiddenNeighbors.foreach{xy => board.setCell(xy, Revealed(-1))}
+          board.removeMoves(hiddenNeighbors)
           None()
         case v => if (v > 0) Some(xy) else None()
       }
@@ -56,7 +58,7 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
       val newMoves = board.findMovesBySubset(xy)
       if (newMoves.size > 0) {
         moves = moves.append(newMoves)
-        newMoves.foreach{ move => board.setCell(move, Revealed(-1)) }
+        board.removeMoves(newMoves)
         madeProgress = true
       }
     }
@@ -153,4 +155,8 @@ def removeMine(board: Board, mine: XY): Unit = {
 
 def removeMines(board: Board, mines: List[XY]): Unit = {
   mines.foreach{ xy => board.removeMine(xy) }
+}
+
+def removeMoves(board: Board, moves: List[XY]): Unit = {
+  moves.foreach{xy => board.setCell(xy, Revealed(-1))}
 }

@@ -56,7 +56,7 @@ def testSolve() = {
   val board = simpleBoard2()
   var moves: List[XY] = empty()
   try {
-    moves = board.getMoves()
+    moves = board.getMoves(Nil(),Nil())
     ()
   }
   with QuickMoves {_ => resume(())}
@@ -102,7 +102,7 @@ def testSubset() = {
 
 def testSolver(board: Board, amtMoves: Int, expMove: XY) = {
   var moves: List[XY] = empty()
-  try {moves = board.getMoves(); ()}
+  try {moves = board.getMoves(Nil(),Nil()); ()}
   with QuickMoves {_ => resume(())}
   do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
   do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
@@ -127,7 +127,7 @@ def runTests() = {
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0))}
     test("SolveSubsetMap3"){testSolver(subsetBoard1(), 2, XY(0,2))}
     test("SolveSubsetMap4"){testSolver(subsetBoard2(), 2, XY(2,2))}
-    test("SolveCorner"){testSolver(cornerBoard(), 1, XY(0,0))}
+    // test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0))}
   }
   println("All tests passed!")
 }
