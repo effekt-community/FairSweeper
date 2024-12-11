@@ -100,12 +100,7 @@ def testSubset() = {
   do assert(l2.isSubset(l1), "l2 is a subset of l1")
 }
 
-def testSolverSimple() = {
-  val board = simpleBoard1()
-  do assert(0 == 1, "todo")
-}
-
-def testSolverComplex(board: Board, amtMoves: Int, expMove: XY) = {
+def testSolver(board: Board, amtMoves: Int, expMove: XY) = {
   var moves: List[XY] = empty()
   try {moves = board.getMoves(); ()}
   with QuickMoves {_ => resume(())}
@@ -128,10 +123,11 @@ def runTests() = {
     test("CalcDifference"){testDifference()}
     test("IsSubset"){testSubset()}
     test("NoSureMove"){testSolve()}
-    test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
-    test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}
-    test("SolveComplexMap3"){testSolverComplex(complexBoard3(), 2, XY(0,2))}
-    test("SolveComplexMap4"){testSolverComplex(complexBoard4(), 2, XY(2,2))}
+    test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2))}
+    test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0))}
+    test("SolveSubsetMap3"){testSolver(subsetBoard1(), 2, XY(0,2))}
+    test("SolveSubsetMap4"){testSolver(subsetBoard2(), 2, XY(2,2))}
+    test("SolveCorner"){testSolver(cornerBoard(), 1, XY(0,0))}
   }
   println("All tests passed!")
 }

@@ -61,6 +61,15 @@ def getMoves(board: Board): List[XY] / {QuickMoves} = {
       }
     }
   }
+  // if all bombs found other fields must be save
+  if (amtMines == 0) {
+    board.foreach{ (xy,cell) =>
+      cell match {
+        case Hidden(_,_) => moves = moves.append(Cons(xy,Nil()))
+        case _ => ()
+      }
+    }
+  }
   moves
 }
 

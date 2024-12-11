@@ -2,12 +2,12 @@ module src/boards
 
 import src/game
 
-/**
+/*
 0 0 0 0
 0 1 1 1
 0 1 B ?
 0 1 ? B
-**/
+*/
 def simpleBoard1() = {
   var board = buildBoard(4, 4, Cons(XY(2,2),Cons(XY(3,3),Nil())))
   try {board.revealCell(XY(0,0))}
@@ -15,11 +15,11 @@ def simpleBoard1() = {
   board
 }
 
-/**
+/*
 B ? ?
 ? 1 ?
 ? ? ?
-**/
+*/
 def simpleBoard2(): Board = {
   var board = buildBoard(3, 3, Cons(XY(0,0),Nil()))
   try {board.revealCell(XY(1,1))}
@@ -27,12 +27,12 @@ def simpleBoard2(): Board = {
   board
 }
 
-/**
+/*
 F 2 F
 2 4 2
 ? ? ?
-**/
-def complexBoard1() = {
+*/
+def differenceBoard1() = {
   var board = buildBoard(3, 3, Cons(XY(0,0),Cons(XY(2,0),Cons(XY(0,2),Cons(XY(2,2),Nil())))))
   try {
     board.revealCell(XY(0,1))
@@ -44,39 +44,52 @@ def complexBoard1() = {
   board
 }
 
-/**
+/*
 ? ? ? ? ? ?
 F 2 2 2 2 ?
 1 1 0 0 2 ?
 0 0 0 0 1 ?
-**/
-def complexBoard2() = {
+*/
+def differenceBoard2() = {
   var board = buildBoard(4, 6, Cons(XY(0,1),Cons(XY(2,0),Cons(XY(3,0),Cons(XY(5,1),Cons(XY(5,3),Nil()))))))
   try {board.revealCell(XY(0,3))}
   with GameOver {()}
   board
 }
 
-/**
+/*
 0 0 0
 1 1 1
 ? B ?
-**/
-def complexBoard3() = {
+*/
+def subsetBoard1() = {
   var board = buildBoard(3, 3, Cons(XY(1,2),Nil()))
   try {board.revealCell(XY(0,0))}
   with GameOver {()}
   board
 }
 
-/**
+/*
 0 0 0 0
 1 1 1 1
 B ? ? B
-**/
-def complexBoard4() = {
+*/
+def subsetBoard2() = {
   var board = buildBoard(3, 4, Cons(XY(0,2),Cons(XY(3,2),Nil())))
   try {board.revealCell(XY(0,0))}
+  with GameOver {()}
+  board
+}
+
+/*
+3 B 2 0
+B B 2 0
+2 2 1 0
+0 0 0 0
+*/
+def cornerBoard() = {
+  var board = buildBoard(4, 4, Cons(XY(0,1),Cons(XY(1,1),Cons(XY(1,0),Nil()))))
+  try {board.revealCell(XY(3,0))}
   with GameOver {()}
   board
 }
