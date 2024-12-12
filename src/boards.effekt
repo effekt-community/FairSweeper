@@ -73,6 +73,22 @@ def differenceBoard3() = {
 }
 
 /*
+B ? 1
+3 B ?
+B ? ?
+1 ? B
+*/
+def differenceBoard4() = {
+  var board = buildBoard(4, 3, Cons(XY(0,0),Cons(XY(1,1),Cons(XY(0,2),Cons(XY(2,3),Nil())))))
+  try {
+    board.revealCell(XY(0,3))
+    board.revealCell(XY(2,0))
+  }
+  with GameOver {()}
+  board
+}
+
+/*
 0 0 0
 1 1 1
 ? B ?

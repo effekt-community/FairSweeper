@@ -3,7 +3,9 @@ import src/utils
 
 effect QuickMoves(moves: List[XY]): Unit
 
-def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): List[XY] / {QuickMoves} = {
+def getMoves(board: Board): (List[XY],List[XY]) / {QuickMoves} = board.getMoves(Nil(),Nil())
+
+def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) / {QuickMoves} = {
   var board = board
   var amtMines = board.mines
   var madeProgress = true
@@ -77,7 +79,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): List[XY]
     if (acc.any{old => equals(nw, old)}) acc
     else acc.append(Cons(nw,Nil()))
   }
-  moves
+  (moves,foundMines)
 }
 
 def findMinesByDifference(board: Board, xy: XY): List[XY] = {

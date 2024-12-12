@@ -56,11 +56,12 @@ def testSolve() = {
   val board = simpleBoard2()
   var moves: List[XY] = empty()
   try {
-    moves = board.getMoves(Nil(),Nil())
+    board.getMoves() match {
+      case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
+    }
     ()
   }
   with QuickMoves {_ => resume(())}
-  do assert(moves.size == 0, "Solver should return no moves")
 }
 
 def testHiddenNeighbors() = {
@@ -100,13 +101,19 @@ def testSubset() = {
   do assert(l2.isSubset(l1), "l2 is a subset of l1")
 }
 
-def testSolver(board: Board, amtMoves: Int, expMove: XY) = {
-  var moves: List[XY] = empty()
-  try {moves = board.getMoves(Nil(),Nil()); ()}
-  with QuickMoves {_ => resume(())}
-  do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
-  do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
-}
+def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY) = {
+  try {
+    board.getMoves() match {
+      case (moves,mines) =>
+        if (not(expMove == XY(-1,-1))) do assert(moves.any{xy => xy == expMove}, "A move should be at (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
+        if (not(expMine == XY(-1,-1))) do assert(mines.any{xy => xy == expMine}, "A mine should be at (" ++ expMine.x.show ++ "," ++ expMine.y.show ++ ")")
+        do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
+    }
+    ()
+  }
+  with QuickMoves {_ => resume(())}}
+
+def testSolver(board: Board, amtMoves: Int) = testSolver(board, amtMoves, XY(-1,-1), XY(-1,-1))
 
 def runTests() = {
   println("Running tests...")
@@ -122,13 +129,14 @@ def runTests() = {
     test("CalcIntersection"){testIntersection()}
     test("CalcDifference"){testDifference()}
     test("IsSubset"){testSubset()}
-    test("NoSureMove"){testSolve()}
-    test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2))}
-    test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0))}
-    test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2))}
-    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2))}
-    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2))}
-    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0))}
+    test("NoSureMove"){testSolver(simpleBoard2(), 0)}
+    test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2))}
+    test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
+    test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
+    test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 2, XY(2,1), XY(0,0))}
+    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2))}
+    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2))}
+    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1))}
   }
   println("All tests passed!")
 }
