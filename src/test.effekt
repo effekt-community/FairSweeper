@@ -5,6 +5,7 @@ import src/game
 import src/solver
 import src/boards
 import src/utils
+import src/main
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
@@ -113,7 +114,9 @@ def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY) = {
   }
   with QuickMoves {_ => resume(())}}
 
-def testSolver(board: Board, amtMoves: Int) = testSolver(board, amtMoves, XY(-1,-1), XY(-1,-1))
+// reduced function for simpler function calls
+def testSolver(board: Board, amtMoves: Int, expMine: XY) = testSolver(board, amtMoves, XY(-1,-1), expMine)
+def testSolver(board: Board, amtMoves: Int) = testSolver(board, amtMoves, XY(-1,-1))
 
 def runTests() = {
   println("Running tests...")
@@ -134,8 +137,10 @@ def runTests() = {
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
     test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 2, XY(2,1), XY(0,0))}
+    test("SolveDifferenceMap5"){testSolver(differenceBoard5(), 0, XY(0,2))}
     test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2))}
     test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2))}
+    test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
     test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1))}
   }
   println("All tests passed!")

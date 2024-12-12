@@ -28,7 +28,7 @@ def playGame(board: Board): Unit / {Flag, Reveal} = {
   with on[WrongFormat].panic
   var board = board
   while (true) {
-    printBoard(board, false)
+    print(board, false)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     println(clear())
     input.split(" ") match {
@@ -45,7 +45,7 @@ def askUser(prompt: String): String = {
   do readLine()
 }
 
-def printBoard(board: Board, showBombs: Bool): Unit = {
+def print(board: Board, showBombs: Bool): Unit = {
   var str = ""
   var counter = 0
   str = str ++ "\n"

@@ -1,12 +1,13 @@
 import src/game
 import src/utils
+import src/main
 
 effect QuickMoves(moves: List[XY]): Unit
 
 def getMoves(board: Board): (List[XY],List[XY]) / {QuickMoves} = board.getMoves(Nil(),Nil())
 
 def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) / {QuickMoves} = {
-  var board = board
+  var board = board.copy
   var amtMines = board.mines
   var madeProgress = true
   var foundMines = foundMines
@@ -65,7 +66,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
       }
     }
   }
-  // if all bombs found other fields must be save
+  // if all bombs found other moves must be save
   if (amtMines == 0) {
     board.foreach{ (xy,cell) =>
       cell match {
@@ -96,8 +97,8 @@ def findMinesByDifference(board: Board, xy: XY): List[XY] = {
 def findMovesBySubset(board: Board, xy: XY): List[XY] = {
   board.checkByHiddenNeighbors(xy) { (a,b) =>
     (a,b) match {
-      case ((hdnbs, _), (hdnbs2, _)) =>
-        if (hdnbs.isSubset(hdnbs2) and hdnbs.size() > 0) {
+      case ((hdnbs, c1), (hdnbs2, c2)) =>
+        if (hdnbs.isSubset(hdnbs2) and hdnbs.size() > 0 and c1 == c2) {
           getDifference(hdnbs2, hdnbs)
         }
         else Nil()
@@ -135,7 +136,6 @@ def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
 }
 
 def getDifference(list: List[XY], without: List[XY]): List[XY] = {
-  var diff: List[XY] = empty()
   val intersection = list.getIntersection(without)
   list.collect{xyl =>
     if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)

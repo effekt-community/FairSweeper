@@ -81,8 +81,26 @@ B ? ?
 def differenceBoard4() = {
   var board = buildBoard(4, 3, Cons(XY(0,0),Cons(XY(1,1),Cons(XY(0,2),Cons(XY(2,3),Nil())))))
   try {
+    board.revealCell(XY(0,1))
     board.revealCell(XY(0,3))
     board.revealCell(XY(2,0))
+  }
+  with GameOver {()}
+  board
+}
+
+
+/* Combining multiple difference checks
+1 ? B
+B 4 B
+B ? 1
+*/
+def differenceBoard5() = {
+  var board = buildBoard(3, 3, Cons(XY(0,1),Cons(XY(0,2),Cons(XY(2,0),Cons(XY(2,1),Nil())))))
+  try {
+    board.revealCell(XY(0,0))
+    board.revealCell(XY(1,1))
+    board.revealCell(XY(2,2))
   }
   with GameOver {()}
   board
@@ -108,6 +126,22 @@ B ? ? B
 def subsetBoard2() = {
   var board = buildBoard(3, 4, Cons(XY(0,2),Cons(XY(3,2),Nil())))
   try {board.revealCell(XY(0,0))}
+  with GameOver {()}
+  board
+}
+
+/* Combining multiple subset checks
+1 ? ?
+B 2 B
+? ? 1
+*/
+def subsetBoard3() = {
+  var board = buildBoard(3, 3, Cons(XY(0,1),Cons(XY(2,1),Nil())))
+  try {
+    board.revealCell(XY(0,0))
+    board.revealCell(XY(1,1))
+    board.revealCell(XY(2,2))
+  }
   with GameOver {()}
   board
 }

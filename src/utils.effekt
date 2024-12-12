@@ -28,7 +28,7 @@ def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
   }
 }
 
-def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit= {
+def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit = {
   try {
     val x = do Offset(0, board.cols)
     val y = do Offset(0, board.rows)
@@ -49,4 +49,13 @@ def collect[A](board: Board) {f: (XY, Cell) => Option[A]}: List[A] = {
     }
   }
   acc.reverse
+}
+
+def copy(board: Board): Board = {
+  with on[OutOfBounds].panic
+  var newGrid = board.grid.copy
+  newGrid.foreachIndex{ (index,row) =>
+    newGrid.set(index,row.copy)
+  }
+  Board(newGrid, board.rows, board.cols, board.mines)
 }
