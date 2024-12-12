@@ -16,6 +16,10 @@ def infixEq(left: XY, right: XY): Bool =
 
 def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
 
+def println(xys: List[XY]): Unit = {
+  xys.foreach{xy => println(xy.show)}
+}
+
 // Board
 def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
   board.collect{ (xy, cell) =>

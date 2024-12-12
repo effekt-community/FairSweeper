@@ -55,7 +55,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): List[XY]
 
     // solve via subset
     numbers.foreach{ xy =>
-      val newMoves = board.findMovesBySubset(xy)
+      var newMoves = board.findMovesBySubset(xy)
       if (newMoves.size > 0) {
         moves = moves.append(newMoves)
         board.removeMoves(newMoves)
@@ -71,6 +71,11 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): List[XY]
         case _ => ()
       }
     }
+  }
+  // remove duplicate moves (should only rarely happen)
+  moves = moves.foldRight(Nil()){(nw,acc) =>
+    if (acc.any{old => equals(nw, old)}) acc
+    else acc.append(Cons(nw,Nil()))
   }
   moves
 }
@@ -90,7 +95,9 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] = {
   board.checkByHiddenNeighbors(xy) { (a,b) =>
     (a,b) match {
       case ((hdnbs, _), (hdnbs2, _)) =>
-        if (hdnbs.isSubset(hdnbs2)) getDifference(hdnbs2, hdnbs)
+        if (hdnbs.isSubset(hdnbs2) and hdnbs.size() > 0) {
+          getDifference(hdnbs2, hdnbs)
+        }
         else Nil()
     }
   }
@@ -98,7 +105,7 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] = {
 
 def checkByHiddenNeighbors(board: Board, xy: XY) {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
   val count = if (board.getCell(xy) is Revealed(c)) c else 0
-  val nbs = board.neighbors(xy)
+  val nbs = board.getNeighbors(xy, 2)
   val hdnbs = board.hiddenNeighbors(xy)
   var acc: List[XY] = empty()
   nbs.foreach{ xy2 =>
@@ -135,7 +142,7 @@ def getDifference(list: List[XY], without: List[XY]): List[XY] = {
 }
 
 def hiddenNeighbors(board: Board, xy: XY): List[XY] = {
-  board.neighbors(xy).collect{ xy =>
+  board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
       case Hidden(_, _) => Some(xy)
       case _ => None()
@@ -145,7 +152,7 @@ def hiddenNeighbors(board: Board, xy: XY): List[XY] = {
 
 def removeMine(board: Board, mine: XY): Unit = {
   board.setCell(mine, Revealed(0))
-  board.neighbors(mine).foreach{ xy =>
+  board.getNeighbors(mine, 1).foreach{ xy =>
     board.getCell(xy) match {
       case Revealed(count) => board.setCell(xy, Revealed(count - 1))
       case _ => ()
@@ -158,5 +165,5 @@ def removeMines(board: Board, mines: List[XY]): Unit = {
 }
 
 def removeMoves(board: Board, moves: List[XY]): Unit = {
-  moves.foreach{xy => board.setCell(xy, Revealed(-1))}
+  moves.foreach{ xy => board.setCell(xy, Revealed(-1)) }
 }

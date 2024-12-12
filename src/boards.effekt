@@ -58,6 +58,21 @@ def differenceBoard2() = {
 }
 
 /*
+B B ?
+4 ? 2
+B B ?
+*/
+def differenceBoard3() = {
+  var board = buildBoard(3, 3, Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,2),Cons(XY(1,2),Nil())))))
+  try {
+    board.revealCell(XY(0,1))
+    board.revealCell(XY(2,1))
+  }
+  with GameOver {()}
+  board
+}
+
+/*
 0 0 0
 1 1 1
 ? B ?
@@ -90,19 +105,6 @@ B B 2 0
 def surroundedBoard() = {
   var board = buildBoard(4, 4, Cons(XY(0,1),Cons(XY(1,1),Cons(XY(1,0),Nil()))))
   try {board.revealCell(XY(3,0))}
-  with GameOver {()}
-  board
-}
-
-/*
-? B ? B
-1 1 3 ?
-0 0 1 B
-0 0 1 ?
-*/
-def surroundedBoard() = {
-  var board = buildBoard(4, 4, Cons(XY(0,1),Cons(XY(1,1),Cons(XY(1,0),Nil()))))
-  try {board.revealCell(XY(0,2))}
   with GameOver {()}
   board
 }

@@ -125,9 +125,10 @@ def runTests() = {
     test("NoSureMove"){testSolve()}
     test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2))}
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0))}
-    test("SolveSubsetMap3"){testSolver(subsetBoard1(), 2, XY(0,2))}
-    test("SolveSubsetMap4"){testSolver(subsetBoard2(), 2, XY(2,2))}
-    // test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0))}
+    test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2))}
+    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2))}
+    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2))}
+    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0))}
   }
   println("All tests passed!")
 }
