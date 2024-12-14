@@ -1,23 +1,30 @@
+module src/probabilitySolver
+
 import src/game
 import src/utils
 import src/main
+import src/solver
 
 effect MaybeMine(): Bool
 effect PlaceMMines(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
-  val board = board.copy()
-  board.hideHiddenInfo()
-  var probs: List[(XY,Double)] = empty()
-  var numbers = board.getXY{
+  val board = board.copy
+  board.hideHiddenInfo
+  val numbers = board.getXY{
     case Revealed(count) and count > 0 => true
     case _ => false
   }
+  val relevantCells = numbers.collect{ xy =>
+    Some(board.getHiddenNeighbors(xy))
+  }.flatMap{l => l}.removeDuplicates
+  println(relevantCells)
+  var probs: List[(XY,Double)] = empty()
   var boardAmount = 0
   var validBoards: List[List[XY]] = empty()
   try {
     numbers.all{ xy =>
-      var newBoard = board.copy()
+      var newBoard = board.copy
       do PlaceMMines(xy, newBoard)
       false
     }
@@ -26,6 +33,18 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   probs
 }
+
+def isValid(board: Board, xy: XY) = <>
+
+// def mineCount(board: Board, xy: XY): Int = {
+//   val l: List[XY] = board.getNeighbors(xy, 1)
+//   l.count[XY]{ xy =>
+//     board.getCell(xy) match {
+//       case Mine() => true
+//       case _ => false
+//     }
+//   }
+// }
 // effect PlaceMMines(xy: XY, board: ProbabilityBoard): ProbabilityBoard
 
 // record ProbabilityBoard(grid: Array[Array[ProbCell]], rows: Int, cols: Int, mines: Int)

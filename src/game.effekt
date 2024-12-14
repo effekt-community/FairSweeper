@@ -12,7 +12,7 @@ type Cell {
   Revealed(adjacentMines: Int)
   // Helper for solver
   TrueHidden()
-  Bomb()
+  Mine()
 }
 
 record XY(x: Int, y: Int)
@@ -35,7 +35,7 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   try {
     val x = do Offset(0, rows)
     val y = do Offset(0, cols)
-    cells = cells.append(Cons(XY(x,y),Nil()))
+    cells = cells.append([XY(x,y)])
   } with Offset {(s,e) =>
     each(s,e) {v => resume(v)}
   }

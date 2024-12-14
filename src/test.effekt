@@ -6,6 +6,7 @@ import src/solver
 import src/boards
 import src/utils
 import src/main
+import src/probabilitySolver
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
@@ -83,23 +84,23 @@ def testRemoveMine() = {
 }
 
 def testIntersection() = {
-  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
-  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
   val intersection = l1.getIntersection(l2)
   do assert(intersection.any{xy => xy == XY(0,1)}, "Intersection should be XY(0,1)")
 }
 
 def testDifference() = {
-  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
-  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
   val intersection = l1.getDifference(l2)
   do assert(intersection.any{xy => xy == XY(0,0)}, "Difference should contain XY(0,0)")
   do assert(intersection.any{xy => xy == XY(1,0)}, "Difference should contain XY(1,0)")
 }
 
 def testSubset() = {
-  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
-  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
   do assert(l2.isSubset(l1), "l2 is a subset of l1")
 }
 
@@ -118,6 +119,17 @@ def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY) = {
 // reduced function for simpler function calls
 def testSolver(board: Board, amtMoves: Int, expMine: XY) = testSolver(board, amtMoves, XY(-1,-1), expMine)
 def testSolver(board: Board, amtMoves: Int) = testSolver(board, amtMoves, XY(-1,-1))
+
+// ---------------------------- PROB. SOLVER --------------------------------
+
+def testProbabilitySolver() = {
+  val board = simpleBoard1()
+  getProbabilities(board)
+  do assert(true, "")
+}
+
+
+// -------------------------------- TESTS ---------------------------------------
 
 def runTests() = {
   println("Running tests...")
@@ -145,6 +157,9 @@ def runTests() = {
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
     test("SolveDifferenceMap5"){testSolver(differenceBoard4(), 0, XY(0,2))}
     // test("SolveCountMap4"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
+  }
+  suite("ProbSolver") {
+    test("Basic"){testProbabilitySolver()}
   }
   println("All tests passed!")
 }
