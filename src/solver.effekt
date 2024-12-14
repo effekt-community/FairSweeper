@@ -76,14 +76,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
     }
   }
   // remove duplicate moves (should only rarely happen)
-  moves = moves.foldRight(Nil()){(nw,acc) =>
-    if (acc.any{old => equals(nw, old)}) acc
-    else acc.append(Cons(nw,Nil()))
-  }
-  foundMines = foundMines.foldRight(Nil()){(nw,acc) =>
-    if (acc.any{old => equals(nw, old)}) acc
-    else acc.append(Cons(nw,Nil()))
-  }
+  moves = moves.removeDuplicates()
   // println(moves)
   // println(board)
   // println(foundMines)
@@ -145,10 +138,7 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
       }
     }
   }
-  acc.foldRight(Nil()){(nw,acc) =>
-    if (acc.any{old => equals(nw, old)}) acc
-    else acc.append(Cons(nw,Nil()))
-  }
+  acc.removeDuplicates()
 }
 
 def isSubset(subset: List[XY], set: List[XY]): Bool = {

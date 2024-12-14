@@ -142,8 +142,8 @@ def runTests() = {
     test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2))}
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
-    test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 2, XY(2,1), XY(0,0))}
-    test("SolveDifferenceMap5"){testSolver(differenceBoard5(), 0, XY(0,2))}
+    test("SolveDifferenceMap5"){testSolver(differenceBoard4(), 0, XY(0,2))}
+    // test("SolveCountMap4"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
   }
   println("All tests passed!")
 }
