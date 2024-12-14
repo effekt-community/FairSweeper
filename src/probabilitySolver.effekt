@@ -6,18 +6,10 @@ import src/main
 import src/solver
 
 effect QuantumMine(xy: XY, board: Board): Board
-effect PlaceMMines(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
   val board = board.copy
   board.hideHiddenInfo
-  // val numbers = board.getXY{
-  //   case Revealed(count) and count > 0 => true
-  //   case _ => false
-  // }
-  // val hiddenNearNumber = numbers.collect{ xy =>
-  //   Some(board.getHiddenNeighbors(xy))
-  // }.flatMap{l => l}.removeDuplicates
   val hidden = board.getXY{
     case TrueHidden() => true
     case _ => false
@@ -29,8 +21,9 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenAway = par.second
   val minMines = board.mines - hiddenAway.size
   println(hiddenNearNumber)
+  var hiddenAwayCount = 0
+  var counts = CellDict(Nil())
   var probs: List[(XY,Double)] = empty()
-  // var boardAmount = 0
   // maybe calculate k over n for hiddenAway and give each mine that value
   var validBoards: List[List[XY]] = empty()
   try {
@@ -50,6 +43,24 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     board.setCell(xy, NoMine())
     resume(board)
   }
+  validBoards.foreach{ posbMines =>
+    val part = posbMines.partition{ mine =>
+      hiddenNearNumber.any{ xy => mine == xy}
+    }
+    hiddenAwayCount = hiddenAwayCount + part.second.size
+    part.first.foreach{ xy =>
+      counts = counts.set(xy, counts.get(xy) + 1)
+    }
+  }
+  var boardAmount = 0
+  boardAmount = validBoards.size
+  hiddenNearNumber.foreach{ xy =>
+    val amt = counts.get(xy)
+    probs = probs.append([(xy,(amt.toDouble/boardAmount.toDouble))])
+  }
+  val awayProb = hiddenAwayCount.toDouble/boardAmount.toDouble
+  hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  probs.foreach{case (xy,prob) => println(xy.show ++ prob.show)}
   probs
 }
 
@@ -65,7 +76,7 @@ def isValid(board: Board, xy: XY, minMines: Int): Bool = {
   board.getRevealedNeighbors(xy).all{ xy =>
     board.getCell(xy) match {
       case Revealed(c) => c >= board.mineCount(xy)
-      case _ => <>
+      case _ => println("How did we get here"); <>
     }
   } && minMines <= board.getMines.size
 }
@@ -77,46 +88,3 @@ def mineCount(board: Board, xy: XY): Int =
       case _ => None()
     }
   }.size
-
-// effect PlaceMMines(xy: XY, board: ProbabilityBoard): ProbabilityBoard
-
-// record ProbabilityBoard(grid: Array[Array[ProbCell]], rows: Int, cols: Int, mines: Int)
-// type ProbCell {
-//   Bomb()
-//   Open(mines: Int)
-// }
-
-// def copy(board: ProbabilityBoard): ProbabilityBoard = {
-//   with on[OutOfBounds].panic
-//   var newGrid = board.grid.copy
-//   newGrid.foreachIndex{ (index,row) =>
-//     newGrid.set(index,row.copy)
-//   }
-//   ProbabilityBoard(newGrid, board.rows, board.cols, board.mines)
-// }
-
-// def fromBoard(board: Board): ProbabilityBoard = {
-//   var newGrid: Array[Array[ProbCell]] = allocate(10)
-
-//   ProbabilityBoard(newGrid, board.rows, board.cols, board.mines)
-// }
-
-// def getProbabilities(board: Board): List[(XY,Double)] = {
-//   var probs: List[(XY,Double)] = empty()
-//   var numbers = board.getXY{
-//     case Revealed(count) and count > 0 => true
-//     case _ => false
-//   }
-//   var boardAmount = 0
-//   var validBoards: List[List[XY]] = empty()
-//   try {
-//     numbers.all{ xy =>
-//       var newBoard = board.copy()
-//       do PlaceMMines(xy, newBoard)
-//       false
-//     }
-//   } with PlaceMMines { (xy,board) =>
-//     <>
-//   }
-//   probs
-// }

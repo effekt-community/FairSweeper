@@ -1,35 +1,12 @@
 module src/game
 
+import src/utils
+
 effect Reveal(cell: (Int,Int)): Unit
 effect GameOver(): Unit
 effect Flag(cell: (Int,Int)): Unit
 
 // for resuming with each value with each()
-effect Offset(start: Int, end: Int): Int
-
-type Cell {
-  Hidden(hasMine: Bool, isFlagged: Bool)
-  Revealed(adjacentMines: Int)
-  // Helper for solver
-  TrueHidden()
-  Mine()
-  NoMine()
-}
-
-record XY(x: Int, y: Int)
-
-record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
-
-def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
-  with on[OutOfBounds].panic
-  var grid: Array[Array[Cell]] = allocate(rows)
-  each(0,rows) {rw =>
-    grid.set(rw, array(cols, Hidden(false, false)))
-  }
-  val board = Board(grid, rows, cols, mines.size())
-  mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
-  return board
-}
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   var cells: List[XY] = empty()
@@ -46,16 +23,6 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
     cells = cells.deleteAt(idx)
   }
   return buildBoard(rows, cols, cells)
-}
-
-def getCell(board: Board, xy: XY): Cell = {
-  with on[OutOfBounds].panic
-  return board.grid.get(xy.y).get(xy.x)
-}
-
-def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
-  with on[OutOfBounds].panic
-  board.grid.get(xy.y).set(xy.x, new_val)
 }
 
 def flagCell(board: Board, xy: XY): Board / {} = {

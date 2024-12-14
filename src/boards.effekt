@@ -1,6 +1,7 @@
 module src/boards
 
 import src/game
+import src/utils
 
 /*
 0 0 0 0

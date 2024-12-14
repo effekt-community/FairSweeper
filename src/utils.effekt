@@ -1,6 +1,17 @@
-import src/game
+// -------------------------- Other ----------------------------
+effect Offset(start: Int, end: Int): Int
+effect Return[A](v: A): Unit
 
-// Cell
+// -------------------------- Cell ------------------------------
+type Cell {
+  Hidden(hasMine: Bool, isFlagged: Bool)
+  Revealed(adjacentMines: Int)
+  // Helper for solver
+  TrueHidden()
+  Mine()
+  NoMine()
+}
+
 def infixEq(left: Cell, right: Cell): Bool =
   if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
     l1 == r1 && l2 == r2
@@ -8,7 +19,9 @@ def infixEq(left: Cell, right: Cell): Bool =
     a == b
   } else false
 
-// XY
+// --------------------------- XY --------------------------------
+record XY(x: Int, y: Int)
+
 def infixEq(left: XY, right: XY): Bool =
   if (left is XY(x1, y1) and right is XY(x2, y2)) {
     x1 == x2 && y1 == y2
@@ -36,7 +49,52 @@ def println(xys: List[XY]): Unit = {
   xys.foreach{xy => println(xy.show)}
 }
 
-// Board
+// ----------------------- CellDict ---------------------------
+record CellDict(items: List[(XY,Int)])
+
+def get(dict: CellDict, key: XY): Int = {
+  try {
+    dict.items.foreach{ case (k,v) =>
+      if (k == key) do Return(v)
+    }
+    0
+  } with Return[Int] {v => v}
+}
+
+def set(dict: CellDict, key: XY, newV: Int): CellDict = {
+  var found = false
+  var items = dict.items.map{case (k,v) =>
+    if (k == key) {found = true; (k,newV)}
+    else (k,v)
+  }
+  if (not(found)) items = items.append([(key,newV)])
+  CellDict(items)
+}
+
+// -------------------------- Board -----------------------------------
+record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
+
+def getCell(board: Board, xy: XY): Cell = {
+  with on[OutOfBounds].panic
+  return board.grid.get(xy.y).get(xy.x)
+}
+
+def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
+  with on[OutOfBounds].panic
+  board.grid.get(xy.y).set(xy.x, new_val)
+}
+
+def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
+  with on[OutOfBounds].panic
+  var grid: Array[Array[Cell]] = allocate(rows)
+  each(0,rows) {rw =>
+    grid.set(rw, array(cols, Hidden(false, false)))
+  }
+  val board = Board(grid, rows, cols, mines.size())
+  mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
+  return board
+}
+
 def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
   board.collect{ (xy, cell) =>
     if (f(cell)) Some(xy)
