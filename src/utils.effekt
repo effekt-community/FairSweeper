@@ -14,6 +14,16 @@ def infixEq(left: XY, right: XY): Bool =
     x1 == x2 && y1 == y2
   } else false
 
+def infixEq(left: List[XY], right: List[XY]): Bool = {
+  with on[OutOfBounds].default{false}
+  var v = left.size == right.size
+  left.foreachIndex{ (idx,xy){ctrl} =>
+    if (not(v)) ctrl.break()
+    v = (xy == right.get(idx))
+  }
+  v
+}
+
 def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
 
 def println(xys: List[XY]): Unit = {

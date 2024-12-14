@@ -29,9 +29,9 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
       val count = if (board.getCell(xy) is Revealed(c)) c else <>
       count match {
         case 0 =>
-          val hiddenNeighbors = board.hiddenNeighbors(xy)
-          moves = moves.append(hiddenNeighbors)
-          board.removeMoves(hiddenNeighbors)
+          val getHiddenNeighbors = board.getHiddenNeighbors(xy)
+          moves = moves.append(getHiddenNeighbors)
+          board.removeMoves(getHiddenNeighbors)
           None()
         case v => if (v > 0) Some(xy) else None()
       }
@@ -42,9 +42,9 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
     madeProgress = false
     // solve via hidden == count
     numbers.foreach{ xy =>
-      val hiddenNeighbors = board.hiddenNeighbors(xy)
+      val getHiddenNeighbors = board.getHiddenNeighbors(xy)
       val count = if (board.getCell(xy) is Revealed(c)) c else <>
-      if (hiddenNeighbors.size() == count) remMines(hiddenNeighbors)
+      if (getHiddenNeighbors.size() == count) remMines(getHiddenNeighbors)
     }
     updateNumbers()
 
@@ -80,11 +80,18 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
     if (acc.any{old => equals(nw, old)}) acc
     else acc.append(Cons(nw,Nil()))
   }
+  foundMines = foundMines.foldRight(Nil()){(nw,acc) =>
+    if (acc.any{old => equals(nw, old)}) acc
+    else acc.append(Cons(nw,Nil()))
+  }
+  // println(moves)
+  // println(board)
+  // println(foundMines)
   (moves,foundMines)
 }
 
 def findMinesByDifference(board: Board, xy: XY): List[XY] = {
-  board.checkByHiddenNeighbors(xy) { (a,b) =>
+  board.checkByHiddenNeighbors(xy, false) { (a,b) =>
     (a,b) match {
       case ((hdnbs, count), (hdnbs2, count2)) and count2 > count =>
         val diff = getDifference(hdnbs2, hdnbs)
@@ -95,7 +102,7 @@ def findMinesByDifference(board: Board, xy: XY): List[XY] = {
 }
 
 def findMovesBySubset(board: Board, xy: XY): List[XY] = {
-  board.checkByHiddenNeighbors(xy) { (a,b) =>
+  board.checkByHiddenNeighbors(xy, true) { (a,b) =>
     (a,b) match {
       case ((hdnbs1, c1), (hdnbs2, c2)) =>
         if (hdnbs1.isSubset(hdnbs2) and hdnbs1.size() > 0 and c1 == c2) {
@@ -106,20 +113,42 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] = {
   }
 }
 
-def checkByHiddenNeighbors(board: Board, xy: XY) {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
-  val count = if (board.getCell(xy) is Revealed(c)) c else 0
-  val nbs = board.getNeighbors(xy, 2)
-  val hdnbs = board.hiddenNeighbors(xy)
-  var acc: List[XY] = empty()
-  nbs.foreach{ xy2 =>
-    board.getCell(xy2) match {
-      case Revealed(count2) and count2 > 0 =>
-        val hdnbs2 = board.hiddenNeighbors(xy2)
-        acc = acc.append(f((hdnbs2, count2), (hdnbs, count)))
-      case _ => ()
+def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
+                                        {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
+  with on[OutOfBounds].panic
+  val count = if (board.getCell(xy) is Revealed(c)) c else <>
+  var nbs = board.getNeighbors(xy, 2)
+  nbs = nbs.collect{ xy =>
+    board.getCell(xy) match {
+      case Revealed(_) => Some(xy)
+      case _ => None()
     }
   }
-  acc
+  val hdnbs = board.getHiddenNeighbors(xy)
+  var acc: List[XY] = empty()
+  if (hdnbs.size > 0) nbs.foreachIndex{ (idx,xy2) =>
+    var hdnbs2: List[XY] = empty()
+    var count2 = 0
+    each(idx, nbs.size) { (idx2){ctrl} =>
+      val curXY = nbs.get(idx2)
+      board.getCell(curXY) match {
+        case Revealed(c) and c > 0 =>
+          if (count < count2) ctrl.break()
+          var hdn = board.getHiddenNeighbors(curXY)
+          if (hdn.size == 0) ctrl.continue()
+          if (not(hdnbs2.getIntersection(hdn) == Nil())) ctrl.break()
+          count2 = count2 + c
+          acc = acc.append(f((hdnbs2.append(hdn), count2), (hdnbs, count)))
+          if (subset) hdn = hdn.getIntersection(hdnbs)
+          hdnbs2 = hdnbs2.append(hdn)
+        case _ => ()
+      }
+    }
+  }
+  acc.foldRight(Nil()){(nw,acc) =>
+    if (acc.any{old => equals(nw, old)}) acc
+    else acc.append(Cons(nw,Nil()))
+  }
 }
 
 def isSubset(subset: List[XY], set: List[XY]): Bool = {
@@ -143,7 +172,7 @@ def getDifference(list: List[XY], without: List[XY]): List[XY] = {
   }
 }
 
-def hiddenNeighbors(board: Board, xy: XY): List[XY] = {
+def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
   board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
       case Hidden(_, _) => Some(xy)

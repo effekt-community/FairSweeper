@@ -67,7 +67,7 @@ def testSolve() = {
 
 def testHiddenNeighbors() = {
   val board = simpleBoard2()
-  val neighbors = hiddenNeighbors(board, XY(1, 1))
+  val neighbors = getHiddenNeighbors(board, XY(1, 1))
   do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
   do assert(neighbors.any{xy => xy == XY(0, 0)}, "Should include top-left neighbor")
   do assert(neighbors.any{xy => xy == XY(2, 2)}, "Should include bottom-right neighbor")
@@ -133,15 +133,17 @@ def runTests() = {
     test("CalcDifference"){testDifference()}
     test("IsSubset"){testSubset()}
     test("NoSureMove"){testSolver(simpleBoard2(), 0)}
+    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1))}
+    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2))}
+    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2))}
+    test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
+    test("SolveSubsetMap4"){testSolver(subsetBoard4(), 0)}
+    test("SolveSubsetMap5"){testSolver(subsetBoard5(), 0)}
     test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2))}
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
     test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 2, XY(2,1), XY(0,0))}
     test("SolveDifferenceMap5"){testSolver(differenceBoard5(), 0, XY(0,2))}
-    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2))}
-    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2))}
-    test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
-    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1))}
   }
   println("All tests passed!")
 }
