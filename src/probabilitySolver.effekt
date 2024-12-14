@@ -5,46 +5,79 @@ import src/utils
 import src/main
 import src/solver
 
-effect MaybeMine(): Bool
+effect QuantumMine(xy: XY, board: Board): Board
 effect PlaceMMines(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
   val board = board.copy
   board.hideHiddenInfo
-  val numbers = board.getXY{
-    case Revealed(count) and count > 0 => true
+  // val numbers = board.getXY{
+  //   case Revealed(count) and count > 0 => true
+  //   case _ => false
+  // }
+  // val hiddenNearNumber = numbers.collect{ xy =>
+  //   Some(board.getHiddenNeighbors(xy))
+  // }.flatMap{l => l}.removeDuplicates
+  val hidden = board.getXY{
+    case TrueHidden() => true
     case _ => false
   }
-  val relevantCells = numbers.collect{ xy =>
-    Some(board.getHiddenNeighbors(xy))
-  }.flatMap{l => l}.removeDuplicates
-  println(relevantCells)
+  val par = hidden.partition{ xy =>
+    board.getRevealedNeighbors(xy).size > 0
+  }
+  val hiddenNearNumber = par.first
+  val hiddenAway = par.second
+  val minMines = board.mines - hiddenAway.size
+  println(hiddenNearNumber)
   var probs: List[(XY,Double)] = empty()
-  var boardAmount = 0
+  // var boardAmount = 0
+  // maybe calculate k over n for hiddenAway and give each mine that value
   var validBoards: List[List[XY]] = empty()
   try {
-    numbers.all{ xy =>
-      var newBoard = board.copy
-      do PlaceMMines(xy, newBoard)
-      false
+    var curBoard = board.copy
+    var valid = true
+    hiddenNearNumber.foreach{ (xy){ctrl} =>
+      curBoard = do QuantumMine(xy, curBoard)
+      valid = curBoard.isValid(xy, minMines)
+      if (not(valid)) ctrl.break
     }
-  } with PlaceMMines { (xy,board) =>
-    <>
+    if (valid) {
+      validBoards = validBoards.append([curBoard.getMines])
+    }
+  } with QuantumMine { (xy, board) =>
+    board.setCell(xy, Mine())
+    resume(board.copy)
+    board.setCell(xy, NoMine())
+    resume(board)
   }
   probs
 }
 
-def isValid(board: Board, xy: XY) = <>
+def getMines(board: Board): List[XY] =
+  board.collect{ (xy,cell) =>
+    cell match {
+      case Mine() => Some(xy)
+      case _ => None()
+    }
+  }
 
-// def mineCount(board: Board, xy: XY): Int = {
-//   val l: List[XY] = board.getNeighbors(xy, 1)
-//   l.count[XY]{ xy =>
-//     board.getCell(xy) match {
-//       case Mine() => true
-//       case _ => false
-//     }
-//   }
-// }
+def isValid(board: Board, xy: XY, minMines: Int): Bool = {
+  board.getRevealedNeighbors(xy).all{ xy =>
+    board.getCell(xy) match {
+      case Revealed(c) => c >= board.mineCount(xy)
+      case _ => <>
+    }
+  } && minMines <= board.getMines.size
+}
+
+def mineCount(board: Board, xy: XY): Int =
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case Mine() => Some(true)
+      case _ => None()
+    }
+  }.size
+
 // effect PlaceMMines(xy: XY, board: ProbabilityBoard): ProbabilityBoard
 
 // record ProbabilityBoard(grid: Array[Array[ProbCell]], rows: Int, cols: Int, mines: Int)

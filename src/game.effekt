@@ -13,6 +13,7 @@ type Cell {
   // Helper for solver
   TrueHidden()
   Mine()
+  NoMine()
 }
 
 record XY(x: Int, y: Int)
@@ -40,7 +41,8 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
     each(s,e) {v => resume(v)}
   }
   while (cells.size() > mines) {
-    val idx = (random() * cells.size().toDouble()).floor()
+    // ?+1 so we can also hit the last cell?
+    val idx = (random() * (cells.size() + 1).toDouble()).floor()
     cells = cells.deleteAt(idx)
   }
   return buildBoard(rows, cols, cells)
@@ -103,6 +105,15 @@ def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
     each(s,e){v => resume(v)}
   }
   list.reverse
+}
+
+def getRevealedNeighbors(board: Board, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case Revealed(_) => Some(xy)
+      case _ => None()
+    }
+  }
 }
 
 def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver} = {
