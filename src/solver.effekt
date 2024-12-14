@@ -7,7 +7,8 @@ effect QuickMoves(moves: List[XY]): Unit
 def getMoves(board: Board): (List[XY],List[XY]) / {QuickMoves} = board.getMoves(Nil(),Nil())
 
 def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) / {QuickMoves} = {
-  var board = board.copy
+  val board = board.copy
+  board.hideHiddenInfo()
   var amtMines = board.mines
   var madeProgress = true
   var foundMines = foundMines
@@ -70,7 +71,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
   if (amtMines == 0) {
     board.foreach{ (xy,cell) =>
       cell match {
-        case Hidden(_,_) => moves = moves.append(Cons(xy,Nil()))
+        case TrueHidden() => moves = moves.append(Cons(xy,Nil()))
         case _ => ()
       }
     }
@@ -110,8 +111,7 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
                                         {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
   with on[OutOfBounds].panic
   val count = if (board.getCell(xy) is Revealed(c)) c else <>
-  var nbs = board.getNeighbors(xy, 2)
-  nbs = nbs.collect{ xy =>
+  val nbs = board.getNeighbors(xy, 2).collect{ xy =>
     board.getCell(xy) match {
       case Revealed(_) => Some(xy)
       case _ => None()
@@ -165,7 +165,7 @@ def getDifference(list: List[XY], without: List[XY]): List[XY] = {
 def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
   board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
-      case Hidden(_, _) => Some(xy)
+      case TrueHidden() => Some(xy)
       case _ => None()
     }
   }

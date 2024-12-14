@@ -67,6 +67,7 @@ def testSolve() = {
 
 def testHiddenNeighbors() = {
   val board = simpleBoard2()
+  board.hideHiddenInfo()
   val neighbors = getHiddenNeighbors(board, XY(1, 1))
   do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
   do assert(neighbors.any{xy => xy == XY(0, 0)}, "Should include top-left neighbor")

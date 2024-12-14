@@ -1,0 +1,70 @@
+import src/game
+import src/utils
+import src/main
+
+effect MaybeMine(): Bool
+effect PlaceMMines(xy: XY, board: Board): Board
+
+def getProbabilities(board: Board): List[(XY,Double)] = {
+  val board = board.copy()
+  board.hideHiddenInfo()
+  var probs: List[(XY,Double)] = empty()
+  var numbers = board.getXY{
+    case Revealed(count) and count > 0 => true
+    case _ => false
+  }
+  var boardAmount = 0
+  var validBoards: List[List[XY]] = empty()
+  try {
+    numbers.all{ xy =>
+      var newBoard = board.copy()
+      do PlaceMMines(xy, newBoard)
+      false
+    }
+  } with PlaceMMines { (xy,board) =>
+    <>
+  }
+  probs
+}
+// effect PlaceMMines(xy: XY, board: ProbabilityBoard): ProbabilityBoard
+
+// record ProbabilityBoard(grid: Array[Array[ProbCell]], rows: Int, cols: Int, mines: Int)
+// type ProbCell {
+//   Bomb()
+//   Open(mines: Int)
+// }
+
+// def copy(board: ProbabilityBoard): ProbabilityBoard = {
+//   with on[OutOfBounds].panic
+//   var newGrid = board.grid.copy
+//   newGrid.foreachIndex{ (index,row) =>
+//     newGrid.set(index,row.copy)
+//   }
+//   ProbabilityBoard(newGrid, board.rows, board.cols, board.mines)
+// }
+
+// def fromBoard(board: Board): ProbabilityBoard = {
+//   var newGrid: Array[Array[ProbCell]] = allocate(10)
+
+//   ProbabilityBoard(newGrid, board.rows, board.cols, board.mines)
+// }
+
+// def getProbabilities(board: Board): List[(XY,Double)] = {
+//   var probs: List[(XY,Double)] = empty()
+//   var numbers = board.getXY{
+//     case Revealed(count) and count > 0 => true
+//     case _ => false
+//   }
+//   var boardAmount = 0
+//   var validBoards: List[List[XY]] = empty()
+//   try {
+//     numbers.all{ xy =>
+//       var newBoard = board.copy()
+//       do PlaceMMines(xy, newBoard)
+//       false
+//     }
+//   } with PlaceMMines { (xy,board) =>
+//     <>
+//   }
+//   probs
+// }

@@ -10,6 +10,9 @@ effect Offset(start: Int, end: Int): Int
 type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(adjacentMines: Int)
+  // Helper for solver
+  TrueHidden()
+  Bomb()
 }
 
 record XY(x: Int, y: Int)
@@ -22,7 +25,7 @@ def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   each(0,rows) {rw =>
     grid.set(rw, array(cols, Hidden(false, false)))
   }
-  var board = Board(grid, rows, cols, mines.size())
+  val board = Board(grid, rows, cols, mines.size())
   mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
   return board
 }
@@ -60,6 +63,7 @@ def flagCell(board: Board, xy: XY): Board / {} = {
       board.setCell(xy, Hidden(hasMine, not(isFlagged)))
     case Revealed(_) =>
       println("Cannot flag a revealed cell!")
+    case _ => <>
   }
   board
 }

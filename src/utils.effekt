@@ -75,3 +75,11 @@ def copy(board: Board): Board = {
   }
   Board(newGrid, board.rows, board.cols, board.mines)
 }
+
+def hideHiddenInfo(board: Board): Unit =
+  board.foreach{ (xy,cell) =>
+    board.getCell(xy) match {
+      case Hidden(_,_) => board.setCell(xy, TrueHidden())
+      case _ => ()
+    }
+  }
