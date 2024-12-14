@@ -97,9 +97,9 @@ def findMinesByDifference(board: Board, xy: XY): List[XY] = {
 def findMovesBySubset(board: Board, xy: XY): List[XY] = {
   board.checkByHiddenNeighbors(xy) { (a,b) =>
     (a,b) match {
-      case ((hdnbs, c1), (hdnbs2, c2)) =>
-        if (hdnbs.isSubset(hdnbs2) and hdnbs.size() > 0 and c1 == c2) {
-          getDifference(hdnbs2, hdnbs)
+      case ((hdnbs1, c1), (hdnbs2, c2)) =>
+        if (hdnbs1.isSubset(hdnbs2) and hdnbs1.size() > 0 and c1 == c2) {
+          getDifference(hdnbs2, hdnbs1)
         }
         else Nil()
     }
@@ -115,7 +115,7 @@ def checkByHiddenNeighbors(board: Board, xy: XY) {f: ((List[XY], Int), (List[XY]
     board.getCell(xy2) match {
       case Revealed(count2) and count2 > 0 =>
         val hdnbs2 = board.hiddenNeighbors(xy2)
-        acc = acc.append(f((hdnbs, count), (hdnbs2, count2)))
+        acc = acc.append(f((hdnbs2, count2), (hdnbs, count)))
       case _ => ()
     }
   }
