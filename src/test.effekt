@@ -106,7 +106,7 @@ def testSubset() = {
 
 def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY) = {
   try {
-    board.getMoves() match {
+    board.getProbabilities.getMovesAndMines match {
       case (moves,mines) =>
         if (not(expMove == XY(-1,-1))) do assert(moves.any{xy => xy == expMove}, "A move should be at (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
         if (not(expMine == XY(-1,-1))) do assert(mines.any{xy => xy == expMine}, "A mine should be at (" ++ expMine.x.show ++ "," ++ expMine.y.show ++ ")")
@@ -156,11 +156,17 @@ def runTests() = {
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
     test("SolveDifferenceMap5"){testSolver(differenceBoard4(), 0, XY(0,2))}
-    // test("SolveCountMap4"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
+    test("SolveCountMap1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
   }
-  suite("ProbSolver") {
-    test("Basic"){testProbabilitySolver()}
-  }
+  // suite("ProbSolver") {
+  //   test("Basic"){testProbabilitySolver()}
+  //   test("SolveSubsetMap3"){testProbabilitySolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
+  //   test("SolveSubsetMap4"){testProbabilitySolver(subsetBoard4(), 0)}
+  //   test("SolveSubsetMap5"){testProbabilitySolver(subsetBoard5(), 0)}
+  //   test("SolveDifferenceMap2"){testProbabilitySolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
+  //   test("SolveDifferenceMap3"){testProbabilitySolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
+  //   test("SolveDifferenceMap5"){testProbabilitySolver(differenceBoard4(), 0, XY(0,2))}
+  // }
   println("All tests passed!")
 }
 
