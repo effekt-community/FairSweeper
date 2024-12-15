@@ -33,11 +33,10 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)
-      valid = curBoard.isValid(xy){(count, mineAmt) => count >= mineAmt}
+      valid = curBoard.isValid(xy)
       if (not(valid)) ctrl.break
     }
     if (valid && curBoard.getMines.size >= minMines) {
-      valid = numbers.all{ xy => curBoard.isValid(xy){(count, mineAmt) => count == mineAmt}}
       if (valid) validBoards = validBoards.append([curBoard.getMines])
     }
   } with QuantumMine { (xy, board) =>
@@ -59,9 +58,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     probs = probs.append([(xy,(amt.toDouble/boardAmount.toDouble))])
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
-  // validBoards.foreach{b => println(b)}
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
-  probs.foreach{case (xy,prob) => println(xy.show ++ prob.show)}
   probs
 }
 
@@ -73,19 +70,23 @@ def getMines(board: Board): List[XY] =
     }
   }
 
-def isValid(board: Board, xy: XY){comp: (Int,Int) => Bool}: Bool = {
+def isValid(board: Board, xy: XY): Bool = {
   board.getRevealedNeighbors(xy).all{ xy =>
+    val mineCheck = board.mineCount(xy)
     board.getCell(xy) match {
-      case Revealed(c) => comp(c, board.mineCount(xy))
+      case Revealed(c) => if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
       case _ => println("How did we get here"); <>
     }
   }
 }
 
-def mineCount(board: Board, xy: XY): Int =
-  board.getNeighbors(xy, 1).collect{ xy =>
+def mineCount(board: Board, xy: XY): (Int,Bool) = {
+  var noTrueHiddenNbs = true
+  (board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
       case Mine() => Some(true)
+      case TrueHidden() => noTrueHiddenNbs = false; None()
       case _ => None()
     }
-  }.size
+  }.size, noTrueHiddenNbs)
+}

@@ -155,7 +155,7 @@ def runTests() = {
     test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2))}
     test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
     test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
-    test("SolveDifferenceMap5"){testSolver(differenceBoard4(), 0, XY(0,2))}
+    test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 0, XY(0,2))}
     test("SolveCountMap1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
   }
   // suite("ProbSolver") {
@@ -165,7 +165,7 @@ def runTests() = {
   //   test("SolveSubsetMap5"){testProbabilitySolver(subsetBoard5(), 0)}
   //   test("SolveDifferenceMap2"){testProbabilitySolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
   //   test("SolveDifferenceMap3"){testProbabilitySolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
-  //   test("SolveDifferenceMap5"){testProbabilitySolver(differenceBoard4(), 0, XY(0,2))}
+  //   test("SolveDifferenceMap4"){testProbabilitySolver(differenceBoard4(), 0, XY(0,2))}
   // }
   println("All tests passed!")
 }
