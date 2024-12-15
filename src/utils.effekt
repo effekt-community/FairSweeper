@@ -1,5 +1,4 @@
 // -------------------------- Other ----------------------------
-effect Offset(start: Int, end: Int): Int
 effect Return[A](v: A): Unit
 
 // -------------------------- Cell ------------------------------
@@ -13,11 +12,14 @@ type Cell {
 }
 
 def infixEq(left: Cell, right: Cell): Bool =
-  if (left is Hidden(l1, l2) and right is Hidden(r1, r2)) {
-    l1 == r1 && l2 == r2
-  } else if (left is Revealed(a) and right is Revealed(b)) {
-    a == b
-  } else false
+  (left, right) match {
+    case (Hidden(l1,l2),Hidden(r1,r2)) => l1==r1 && l2==r2
+    case (Revealed(l),Revealed(r)) => l==r
+    case (TrueHidden(),TrueHidden()) => true
+    case (Mine(),Mine()) => true
+    case (NoMine(),NoMine()) => true
+    case _ => false
+  }
 
 // --------------------------- XY --------------------------------
 record XY(x: Int, y: Int)
@@ -58,6 +60,27 @@ def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
   }
   (moves,mines)
 }
+
+def isSubset(subset: List[XY], set: List[XY]): Bool = {
+  subset.all{ xy =>
+    set.any{xy2 => xy == xy2}
+  }
+}
+
+def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
+  l1.collect{xy1 =>
+    if (l2.any{xy2 => xy2 == xy1}) Some(xy1)
+    else None()
+  }
+}
+
+def getDifference(list: List[XY], without: List[XY]): List[XY] = {
+  val intersection = list.getIntersection(without)
+  list.collect{xyl =>
+    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
+    else None()
+  }
+}
 // ----------------------- CellDict ---------------------------
 record CellDict(items: List[(XY,Int)])
 
@@ -81,72 +104,3 @@ def set(dict: CellDict, key: XY, newV: Int): CellDict = {
 }
 
 // -------------------------- Board -----------------------------------
-record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
-
-def getCell(board: Board, xy: XY): Cell = {
-  with on[OutOfBounds].panic
-  return board.grid.get(xy.y).get(xy.x)
-}
-
-def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
-  with on[OutOfBounds].panic
-  board.grid.get(xy.y).set(xy.x, new_val)
-}
-
-def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
-  with on[OutOfBounds].panic
-  var grid: Array[Array[Cell]] = allocate(rows)
-  each(0,rows) {rw =>
-    grid.set(rw, array(cols, Hidden(false, false)))
-  }
-  val board = Board(grid, rows, cols, mines.size())
-  mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
-  return board
-}
-
-def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
-  board.collect{ (xy, cell) =>
-    if (f(cell)) Some(xy)
-    else None()
-  }
-}
-
-def foreach(board: Board) {f: (XY, Cell) => Unit}: Unit = {
-  try {
-    val x = do Offset(0, board.cols)
-    val y = do Offset(0, board.rows)
-    val xy = XY(x,y)
-    val cell = board.getCell(xy)
-    f(xy, cell)
-  } with Offset {(s,e) =>
-    each(s,e) {v => resume(v)}
-  }
-}
-
-def collect[A](board: Board) {f: (XY, Cell) => Option[A]}: List[A] = {
-  var acc: List[A] = empty()
-  board.foreach{ (a,b) =>
-    f(a,b) match {
-      case Some(v) => acc = Cons(v,acc)
-      case None()  => ()
-    }
-  }
-  acc.reverse
-}
-
-def copy(board: Board): Board = {
-  with on[OutOfBounds].panic
-  var newGrid = board.grid.copy
-  newGrid.foreachIndex{ (index,row) =>
-    newGrid.set(index,row.copy)
-  }
-  Board(newGrid, board.rows, board.cols, board.mines)
-}
-
-def hideHiddenInfo(board: Board): Unit =
-  board.foreach{ (xy,cell) =>
-    board.getCell(xy) match {
-      case Hidden(_,_) => board.setCell(xy, TrueHidden())
-      case _ => ()
-    }
-  }

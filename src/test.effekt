@@ -1,7 +1,7 @@
 module src/test
 
 import test
-import src/game
+import src/board
 import src/solver
 import src/boards
 import src/utils
@@ -77,9 +77,10 @@ def testHiddenNeighbors() = {
 
 def testRemoveMine() = {
   var board = simpleBoard2()
+  board.hideHiddenInfo
   board.removeMine(XY(0, 0))
-  do assert(board.getCell(XY(0, 0)) == Revealed(0), "Bomb revealed")
-  do assert(board.getCell(XY(0, 1)) == Hidden(false, false), "Hidden cells stay hidden")
+  do assert(board.getCell(XY(0, 0)) == Mine(), "Bomb revealed")
+  do assert(board.getCell(XY(0, 1)) == TrueHidden(), "Hidden cells stay hidden")
   do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
 }
 
@@ -133,7 +134,6 @@ def solverTests(){f: (Board) => (List[XY],List[XY])} = {
 }
 
 // -------------------------------- TESTS ---------------------------------------
-
 def runTests() = {
   println("Running tests...")
   suite("Fairsweeper Game") {

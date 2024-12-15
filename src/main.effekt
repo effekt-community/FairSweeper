@@ -1,7 +1,7 @@
 module main // must be named same as the file!
 
 import io/console
-import src/game
+import src/board
 import src/utils
 
 def main() = {

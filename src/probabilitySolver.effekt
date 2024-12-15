@@ -1,6 +1,6 @@
 module src/probabilitySolver
 
-import src/game
+import src/board
 import src/utils
 import src/main
 import src/solver
@@ -8,28 +8,28 @@ import src/solver
 effect QuantumMine(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
-  board.hideHiddenInfo
-  val numbers = board.getXY{
+  var curBoard = board.copy
+  curBoard.hideHiddenInfo
+  val numbers = curBoard.getXY{
     case Revealed(_) => true
     case _ => false
   }
-  val hidden = board.getXY{
+  val hidden = curBoard.getXY{
     case TrueHidden() => true
     case _ => false
   }
   val par = hidden.partition{ xy =>
-    board.getRevealedNeighbors(xy).size > 0
+    curBoard.getRevealedNeighbors(xy).size > 0
   }
   val hiddenNearNumber = par.first
   val hiddenAway = par.second
-  val minMines = board.mines - hiddenAway.size
+  val minMines = curBoard.mines - hiddenAway.size
   var hiddenAwayCount = 0
   var counts = CellDict(Nil())
   var probs: List[(XY,Double)] = empty()
   // maybe calculate k over n for hiddenAway and give each mine that value
   var validBoards: List[List[XY]] = empty()
   try {
-    var curBoard = board.copy
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)

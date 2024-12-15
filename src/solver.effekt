@@ -1,4 +1,4 @@
-import src/game
+import src/board
 import src/utils
 import src/main
 
@@ -8,6 +8,7 @@ def getMoves(board: Board): (List[XY],List[XY]) / {QuickMoves} = board.getMoves(
 
 def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) / {QuickMoves} = {
   val board = board.copy
+  // hide hiden info so solver doesnt have them
   board.hideHiddenInfo
   var amtMines = board.mines
   var madeProgress = true
@@ -141,27 +142,6 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
   acc.removeDuplicates
 }
 
-def isSubset(subset: List[XY], set: List[XY]): Bool = {
-  subset.all{ xy =>
-    set.any{xy2 => xy == xy2}
-  }
-}
-
-def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
-  l1.collect{xy1 =>
-    if (l2.any{xy2 => xy2 == xy1}) Some(xy1)
-    else None()
-  }
-}
-
-def getDifference(list: List[XY], without: List[XY]): List[XY] = {
-  val intersection = list.getIntersection(without)
-  list.collect{xyl =>
-    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
-    else None()
-  }
-}
-
 def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
   board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
@@ -172,7 +152,7 @@ def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
 }
 
 def removeMine(board: Board, mine: XY): Unit = {
-  board.setCell(mine, Revealed(0))
+  board.setCell(mine, Mine())
   board.getNeighbors(mine, 1).foreach{ xy =>
     board.getCell(xy) match {
       case Revealed(count) => board.setCell(xy, Revealed(count - 1))
@@ -186,5 +166,5 @@ def removeMines(board: Board, mines: List[XY]): Unit = {
 }
 
 def removeMoves(board: Board, moves: List[XY]): Unit = {
-  moves.foreach{ xy => board.setCell(xy, Revealed(-1)) }
+  moves.foreach{ xy => board.setCell(xy, NoMine()) }
 }
