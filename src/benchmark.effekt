@@ -2,20 +2,24 @@ import bench
 
 import src/utils
 import src/board
+import src/boards
 import src/solver
-import src/main
 import src/probabilitySolver
 
+// Beginner: 753/1000
+// Intermediate: 59/100, 121/200
+// Expert:
 def main() = {
-  val games = 10
-  val cols = 30
-  val rows = 16
-  val mines = 99
+  val games = 200
+  // val cols = 30
+  // val rows = 16
+  // val mines = 99
   var board = initializeBoard(0, 0, 0)
 
   var wins = 0
   each(0, games) { _ =>
-    val init = timed{board = initializeBoard(rows, cols, mines)}
+    // val init = timed{board = initializeBoard(rows,cols,mines)}
+    val init = timed{board = intermediateBoard()}
     println("Initialized")
     val solving = timed{
       try {while (true) {

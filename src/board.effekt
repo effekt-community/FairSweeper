@@ -195,3 +195,30 @@ def flagCellEffectless(board: Board, xy: XY): Unit / {} = {
   try {board.flagCell(xy)}
   with Flagging {_ => resume(())}
 }
+
+def println(board: Board, showBombs: Bool): Unit = {
+  var str = ""
+  var counter = 0
+  // str = str ++ "\n"
+  str = str ++ "*|"
+  each(0, board.cols) {n => str = str ++ show(n.mod(10)) ++ "|"}
+  foreach(board.grid) {row =>
+    str = str ++ "\n"
+    str = str ++ show(counter) ++ "|"
+    counter = counter + 1
+    foreach(row) {elem =>
+      str = str ++ (elem match {
+        case Hidden(true, _) and showBombs      => "B"
+        case Hidden(_, true)                    => "F"
+        case Hidden(_, false)                   => "◼"
+        case Revealed(count) and (count > 0)    => count.show
+        case Revealed(_)                        => " "
+        case NoMine()                           => "N"
+        case Mine()                             => "M"
+        case TrueHidden()                       => "T"
+      }) ++ "|"
+    }
+  }
+  println(str)
+}
+def println(board: Board): Unit = println(board, false)
