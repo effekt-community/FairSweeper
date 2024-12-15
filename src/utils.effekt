@@ -51,16 +51,6 @@ def println(xys: List[XY]): Unit = {
   xys.foreach{xy => println(xy.show)}
 }
 
-def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
-  var moves: List[XY] = empty()
-  var mines: List[XY] = empty()
-  list.foreach{ case(xy,prob) =>
-    if (prob == 1.0) mines = mines.append([xy])
-    else if (prob == 0.0) moves = moves.append([xy])
-  }
-  (moves,mines)
-}
-
 def isSubset(subset: List[XY], set: List[XY]): Bool = {
   subset.all{ xy =>
     set.any{xy2 => xy == xy2}
@@ -81,6 +71,17 @@ def getDifference(list: List[XY], without: List[XY]): List[XY] = {
     else None()
   }
 }
+
+def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
+  var moves: List[XY] = empty()
+  var mines: List[XY] = empty()
+  list.foreach{ case(xy,prob) =>
+    if (prob >= 0.99) mines = mines.append([xy])
+    else if (prob <= 0.01) moves = moves.append([xy])
+  }
+  (moves,mines)
+}
+
 // ----------------------- CellDict ---------------------------
 record CellDict(items: List[(XY,Int)])
 
@@ -102,5 +103,3 @@ def set(dict: CellDict, key: XY, newV: Int): CellDict = {
   if (not(found)) items = items.append([(key,newV)])
   CellDict(items)
 }
-
-// -------------------------- Board -----------------------------------

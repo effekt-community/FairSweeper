@@ -142,15 +142,6 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
   acc.removeDuplicates
 }
 
-def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
-  board.getNeighbors(xy, 1).collect{ xy =>
-    board.getCell(xy) match {
-      case TrueHidden() => Some(xy)
-      case _ => None()
-    }
-  }
-}
-
 def removeMine(board: Board, mine: XY): Unit = {
   board.setCell(mine, Mine())
   board.getNeighbors(mine, 1).foreach{ xy =>

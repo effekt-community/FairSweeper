@@ -1,0 +1,48 @@
+import bench
+
+import src/utils
+import src/board
+import src/solver
+import src/main
+import src/probabilitySolver
+
+def main() = {
+  val games = 10
+  val cols = 30
+  val rows = 16
+  val mines = 99
+  var board = initializeBoard(0, 0, 0)
+
+  var wins = 0
+  each(0, games) { _ =>
+    val init = timed{board = initializeBoard(rows, cols, mines)}
+    println("Initialized")
+    val solving = timed{
+      try {while (true) {
+        val probs = board.getProbabilities
+        val moves = probs.getMovesAndMines.first
+        if (moves.size > 0) moves.foreach{ xy => board.revealCell(xy)}
+        else {
+          var move = (XY(-1,-1),2.0)
+          probs.foreach {case (xy,prob) =>
+            if (prob < move.second) move = (xy,prob)
+          }
+          if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
+          board.revealCell(move.first)
+          // println(board)
+          println("Guessed: " ++ move.first.show)
+        }
+      }}
+      with GameOver {(board,move) =>
+        println("------- Lost ------")
+        println(move.show)
+        println(board)
+      }
+      with Won {board => println("------- Won -------"); wins = wins + 1}
+      with Revealing {_ => resume(())}
+    }
+    println(init.formatMs)
+    println("Solving: " ++ solving.formatMs)
+  }
+  println(wins)
+}

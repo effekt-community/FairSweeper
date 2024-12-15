@@ -9,8 +9,8 @@ def main() = {
   println(clear())
 
   try {playGame(board)}
-  with GameOver {println("Game Over! You hit a mine.")}
-  with Won {println("You WON!")}
+  with GameOver {(_,_) => println("Game Over! You hit a mine.")}
+  with Won {_ => println("You WON!")}
   with Revealing { xy =>
     println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
@@ -48,7 +48,7 @@ def println(board: Board, showBombs: Bool): Unit = {
   var counter = 0
   // str = str ++ "\n"
   str = str ++ "*|"
-  each(0, board.cols) {n => str = str ++ show(n) ++ "|"}
+  each(0, board.cols) {n => str = str ++ show(n.mod(10)) ++ "|"}
   foreach(board.grid) {row =>
     str = str ++ "\n"
     str = str ++ show(counter) ++ "|"
@@ -58,17 +58,16 @@ def println(board: Board, showBombs: Bool): Unit = {
         case Hidden(true, _) and showBombs      => "B"
         case Hidden(_, true)                    => "F"
         case Hidden(_, false)                   => "◼"
-        case Revealed(count) and (count > 0) => show(count)
-        case Revealed(_)                     => " "
-        case NoMine() => "N"
-        case Mine() => "M"
-        case TrueHidden() => "T"
+        case Revealed(count) and (count > 0)    => count.show
+        case Revealed(_)                        => " "
+        case NoMine()                           => "N"
+        case Mine()                             => "M"
+        case TrueHidden()                       => "T"
       }) ++ "|"
     }
   }
   println(str)
 }
-
 def println(board: Board): Unit = println(board, false)
 
 namespace Escape {

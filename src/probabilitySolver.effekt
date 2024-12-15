@@ -8,12 +8,11 @@ import src/solver
 effect QuantumMine(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
+  println("-- Calculating Probability --")
   var curBoard = board.copy
   curBoard.hideHiddenInfo
-  val numbers = curBoard.getXY{
-    case Revealed(_) => true
-    case _ => false
-  }
+  curBoard.revealObviousMines
+  val numbers = curBoard.getRevealed
   val hidden = curBoard.getXY{
     case TrueHidden() => true
     case _ => false
@@ -70,10 +69,11 @@ def getMines(board: Board): List[XY] =
   }
 
 def isValid(board: Board, xy: XY): Bool = {
-  board.getRevealedNeighbors(xy).all{ xy =>
-    val mineCheck = board.mineCount(xy)
-    board.getCell(xy) match {
-      case Revealed(c) => if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
+  board.getRevealedNeighbors(xy).all{ xy2 =>
+    val mineCheck = board.mineCount(xy2)
+    board.getCell(xy2) match {
+      case Revealed(c) =>
+        if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
       case _ => println("How did we get here"); <>
     }
   }
@@ -88,4 +88,17 @@ def mineCount(board: Board, xy: XY): (Int,Bool) = {
       case _ => None()
     }
   }.size, noTrueHiddenNbs)
+}
+
+def revealObviousMines(board: Board): Unit = {
+  val numbers = board.getRevealed
+  numbers.foreach{ xy =>
+    board.getCell(xy) match {
+      case Revealed(c) =>
+        val hdnbs = board.getHiddenNeighbors(xy)
+        val mines = board.getMineNeighbors(xy)
+        if (hdnbs.size + mines.size == c) hdnbs.foreach{xy2 => board.setCell(xy2, Mine())}
+      case _ => ()
+    }
+  }
 }

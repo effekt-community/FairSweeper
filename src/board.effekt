@@ -2,8 +2,8 @@ import src/utils
 
 effect Revealing(cell: XY): Unit
 effect Flagging(cell: XY): Unit
-effect GameOver(): Unit
-effect Won(): Unit
+effect GameOver(board: Board, move: XY): Unit
+effect Won(board: Board): Unit
 
 // for resuming with each value with each()
 effect Offset(start: Int, end: Int): Int
@@ -82,7 +82,7 @@ def revealCell(board: Board, xy: XY, og: Bool): Unit / {GameOver, Won, Revealing
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
-      if (hasMine) do GameOver()
+      if (hasMine) do GameOver(board, xy)
       if (og) do Revealing(xy)
       else {
         val adjMines = countAdjacentMines(board, xy)
@@ -93,25 +93,29 @@ def revealCell(board: Board, xy: XY, og: Bool): Unit / {GameOver, Won, Revealing
         case Hidden(_,_) => true
         case _ => false
       }
-      if (hidden.size == board.mines) do Won()
+      if (hidden.size == board.mines) do Won(board)
     case _ => ()
   }
 }
 def revealCell(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = board.revealCell(xy,false)
 def revealCellEffectless(board: Board, xy: XY): Unit / {} = {
   try {board.revealCell(xy)}
-  with GameOver {()}
-  with Won {()}
+  with GameOver {(_,_) => ()}
+  with Won {_ => ()}
   with Revealing {_ => resume(())}
 }
 
-def countAdjacentMines(board: Board, xy: XY): Int = {
-  var counter = 0
-  board.getNeighbors(xy, 1).foreach{cel =>
-    if (board.getCell(cel) is Hidden(true, _)) counter = counter + 1
+def countAdjacentMines(board: Board, xy: XY): Int =
+  board.getNeighbors(xy, 1).collect{cel =>
+    if (board.getCell(cel) is Hidden(true, _)) Some(xy)
+    else None()
+  }.size
+
+def getRevealed(board: Board): List[XY] =
+  board.getXY{
+    case Revealed(_) => true
+    case _ => false
   }
-  counter
-}
 
 def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
   var list: List[XY] = empty()
@@ -137,6 +141,24 @@ def getRevealedNeighbors(board: Board, xy: XY): List[XY] = {
   }
 }
 
+def getHiddenNeighbors(board: Board, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case TrueHidden() => Some(xy)
+      case _ => None()
+    }
+  }
+}
+
+def getMineNeighbors(board: Board, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case Mine() => Some(xy)
+      case _ => None()
+    }
+  }
+}
+
 def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = {
   board.getNeighbors(xy, 1).foreach{ xy => board.revealCell(xy) }
 }
@@ -144,15 +166,15 @@ def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver, Won, Revealing}
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   var cells: List[XY] = empty()
   try {
-    val x = do Offset(0, rows)
-    val y = do Offset(0, cols)
+    val y = do Offset(0, rows)
+    val x = do Offset(0, cols)
     cells = cells.append([XY(x,y)])
   } with Offset {(s,e) =>
     each(s,e) {v => resume(v)}
   }
-  while (cells.size() > mines) {
-    // ?+1 so we can also hit the last cell?
-    val idx = (random() * (cells.size() + 1).toDouble()).floor()
+  while (cells.size > mines) {
+    // +1 so we can also hit the last cell
+    val idx = (random() * (cells.size + 1).toDouble).floor
     cells = cells.deleteAt(idx)
   }
   return buildBoard(rows, cols, cells)
