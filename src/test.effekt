@@ -53,7 +53,7 @@ def testCollectWithXY() = {
   do assert(res, "collectWithXY failed to collect the correct cells")
 }
 
-// ---------------------- SOLVER -----------------------------
+// ---------------------- PATTERN SOLVER FUNCTIONS -----------------------------
 def testSolve() = {
   val board = simpleBoard2()
   var moves: List[XY] = empty()
@@ -104,30 +104,33 @@ def testSubset() = {
   do assert(l2.isSubset(l1), "l2 is a subset of l1")
 }
 
-def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY) = {
-  try {
-    board.getProbabilities.getMovesAndMines match {
-      case (moves,mines) =>
-        if (not(expMove == XY(-1,-1))) do assert(moves.any{xy => xy == expMove}, "A move should be at (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
-        if (not(expMine == XY(-1,-1))) do assert(mines.any{xy => xy == expMine}, "A mine should be at (" ++ expMine.x.show ++ "," ++ expMine.y.show ++ ")")
-        do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
-    }
-    ()
+// ---------------------- SOLVER -----------------------------
+def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY){f: (Board) => (List[XY],List[XY])} =
+  f(board) match {
+    case (moves,mines) =>
+      if (not(expMove == XY(-1,-1))) do assert(moves.any{xy => xy == expMove}, "A move should be at (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
+      if (not(expMine == XY(-1,-1))) do assert(mines.any{xy => xy == expMine}, "A mine should be at (" ++ expMine.x.show ++ "," ++ expMine.y.show ++ ")")
+      do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
   }
-  with QuickMoves {_ => resume(())}}
+def testSolver(board: Board, amtMoves: Int, expMine: XY){f: (Board) => (List[XY],List[XY])} =
+  testSolver(board, amtMoves, XY(-1,-1), expMine){f}
+def testSolver(board: Board, amtMoves: Int){f: (Board) => (List[XY],List[XY])} =
+  testSolver(board, amtMoves, XY(-1,-1)){f}
 
-// reduced function for simpler function calls
-def testSolver(board: Board, amtMoves: Int, expMine: XY) = testSolver(board, amtMoves, XY(-1,-1), expMine)
-def testSolver(board: Board, amtMoves: Int) = testSolver(board, amtMoves, XY(-1,-1))
-
-// ---------------------------- PROB. SOLVER --------------------------------
-
-def testProbabilitySolver() = {
-  val board = simpleBoard1()
-  getProbabilities(board)
-  do assert(true, "")
+def solverTests(){f: (Board) => (List[XY],List[XY])} = {
+  test("NoSureMove"){testSolver(simpleBoard2(), 0){f}}
+  test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1)){f}}
+  test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2)){f}}
+  test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2)){f}}
+  test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1)){f}}
+  test("SolveSubsetMap4"){testSolver(subsetBoard4(), 0){f}}
+  test("SolveSubsetMap5"){testSolver(subsetBoard5(), 0){f}}
+  test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2)){f}}
+  test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0)){f}}
+  test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0)){f}}
+  test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 0, XY(0,2)){f}}
+  test("SolveCountMap1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0)){f}}
 }
-
 
 // -------------------------------- TESTS ---------------------------------------
 
@@ -139,34 +142,22 @@ def runTests() = {
     test("AdjacentMines"){testCountAdjacentMines()}
     test("CollectCells"){testCollectWithXY()}
     }
-  suite("Solver") {
+  suite("PatternSolverFunctions") {
     test("UnrevealedNeighbors"){testHiddenNeighbors()}
     test("RemoveMine"){testRemoveMine()}
     test("CalcIntersection"){testIntersection()}
     test("CalcDifference"){testDifference()}
     test("IsSubset"){testSubset()}
-    test("NoSureMove"){testSolver(simpleBoard2(), 0)}
-    test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1))}
-    test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2))}
-    test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2))}
-    test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
-    test("SolveSubsetMap4"){testSolver(subsetBoard4(), 0)}
-    test("SolveSubsetMap5"){testSolver(subsetBoard5(), 0)}
-    test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2))}
-    test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
-    test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
-    test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 0, XY(0,2))}
-    test("SolveCountMap1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0))}
   }
-  // suite("ProbSolver") {
-  //   test("Basic"){testProbabilitySolver()}
-  //   test("SolveSubsetMap3"){testProbabilitySolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1))}
-  //   test("SolveSubsetMap4"){testProbabilitySolver(subsetBoard4(), 0)}
-  //   test("SolveSubsetMap5"){testProbabilitySolver(subsetBoard5(), 0)}
-  //   test("SolveDifferenceMap2"){testProbabilitySolver(differenceBoard2(), 5, XY(5,0), XY(2,0))}
-  //   test("SolveDifferenceMap3"){testProbabilitySolver(differenceBoard3(), 2, XY(2,2), XY(0,0))}
-  //   test("SolveDifferenceMap4"){testProbabilitySolver(differenceBoard4(), 0, XY(0,2))}
-  // }
+  suite("PatternSolver") {
+    solverTests{board =>
+      try {board.getMoves}
+      with QuickMoves {_ => resume(())}
+    }
+  }
+  suite("ProbSolver") {
+    solverTests{board => board.getProbabilities.getMovesAndMines}
+  }
   println("All tests passed!")
 }
 
