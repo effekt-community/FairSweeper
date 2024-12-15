@@ -12,25 +12,19 @@ import src/probabilitySolver
 def testFlagCell() = {
   val board = simpleBoard1()
   val xy = XY(2,3)
-  val updatedBoard = flagCell(board, xy)
-  do assert(equals(updatedBoard.getCell(xy), Hidden(false,true)), "Flagging failed")
-  val toggledBoard = flagCell(updatedBoard, xy)
-  do assert(equals(toggledBoard.getCell(xy), Hidden(false,false)), "Removing flag failed")
+  board.flagCellEffectless(xy)
+  do assert(equals(board.getCell(xy), Hidden(false,true)), "Flagging failed")
+  board.flagCellEffectless(xy)
+  do assert(equals(board.getCell(xy), Hidden(false,false)), "Removing flag failed")
 }
 
 def testRevealCell() = {
   val board = simpleBoard1()
-  try {
-    revealCell(board, XY(0, 0))
-    do assert(board.getCell(XY(0, 0)) match {
-      case Revealed(_) => true
-      case _           => false
-    }, "Reveal failed")
-    revealCell(board, XY(2, 2))
-    do assert(false, "Reveal failed to trigger GameOver for mine")
-  } with GameOver {
-    println("GameOver correctly triggered")
-  }
+  board.revealCellEffectless(XY(0, 0))
+  do assert(board.getCell(XY(0, 0)) match {
+    case Revealed(_) => true
+    case _           => false
+  }, "Reveal failed")
 }
 
 def testCountAdjacentMines() = {

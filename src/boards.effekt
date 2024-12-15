@@ -11,8 +11,7 @@ import src/utils
 */
 def simpleBoard1() = {
   var board = buildBoard(4, 4, [XY(2,2),XY(3,3)])
-  try {board.revealCell(XY(0,0))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
   board
 }
 
@@ -23,8 +22,7 @@ B ? ?
 */
 def simpleBoard2(): Board = {
   var board = buildBoard(3, 3, [XY(0,0)])
-  try {board.revealCell(XY(1,1))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(1,1))
   board
 }
 
@@ -35,13 +33,10 @@ F 2 F
 */
 def differenceBoard1() = {
   var board = buildBoard(3, 3, [XY(0,0),XY(2,0),XY(0,2),XY(2,2)])
-  try {
-    board.revealCell(XY(0,1))
-    board.revealCell(XY(1,0))
-    board.revealCell(XY(1,1))
-    board.revealCell(XY(2,1))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,1))
+  board.revealCellEffectless(XY(1,0))
+  board.revealCellEffectless(XY(1,1))
+  board.revealCellEffectless(XY(2,1))
   board
 }
 
@@ -53,8 +48,7 @@ F 2 2 2 2 ?
 */
 def differenceBoard2() = {
   var board = buildBoard(4, 6, [XY(0,1),XY(2,0),XY(3,0),XY(5,1),XY(5,3)])
-  try {board.revealCell(XY(0,3))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,3))
   board
 }
 
@@ -65,11 +59,8 @@ B B ?
 */
 def differenceBoard3() = {
   var board = buildBoard(3, 3, [XY(0,0),XY(1,0),XY(0,2),XY(1,2)])
-  try {
-    board.revealCell(XY(0,1))
-    board.revealCell(XY(2,1))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,1))
+  board.revealCellEffectless(XY(2,1))
   board
 }
 
@@ -81,12 +72,9 @@ B ? 1
 */
 def differenceBoard4() = {
   var board = buildBoard(3, 3, [XY(0,1),XY(0,2),XY(2,0),XY(2,1)])
-  try {
-    board.revealCell(XY(0,0))
-    board.revealCell(XY(1,1))
-    board.revealCell(XY(2,2))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
+  board.revealCellEffectless(XY(1,1))
+  board.revealCellEffectless(XY(2,2))
   board
 }
 
@@ -104,8 +92,7 @@ B B ? 1
 */
 def subsetBoard1() = {
   var board = buildBoard(3, 3, [XY(1,2)])
-  try {board.revealCell(XY(0,0))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
   board
 }
 
@@ -116,8 +103,7 @@ B ? ? B
 */
 def subsetBoard2() = {
   var board = buildBoard(3, 4, [XY(0,2),XY(3,2)])
-  try {board.revealCell(XY(0,0))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
   board
 }
 
@@ -128,12 +114,9 @@ B 2 B
 */
 def subsetBoard3() = {
   var board = buildBoard(3, 3, [XY(0,1),XY(2,1)])
-  try {
-    board.revealCell(XY(0,0))
-    board.revealCell(XY(1,1))
-    board.revealCell(XY(2,2))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
+  board.revealCellEffectless(XY(1,1))
+  board.revealCellEffectless(XY(2,2))
   board
 }
 
@@ -144,12 +127,9 @@ B 2 B ?
 */
 def subsetBoard4() = {
   var board = buildBoard(3, 4, [XY(0,1),XY(2,1)])
-  try {
-    board.revealCell(XY(0,0))
-    board.revealCell(XY(1,1))
-    board.revealCell(XY(2,2))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
+  board.revealCellEffectless(XY(1,1))
+  board.revealCellEffectless(XY(2,2))
   board
 }
 
@@ -160,12 +140,9 @@ B 2 B
 */
 def subsetBoard5() = {
   var board = buildBoard(3, 3, [XY(0,1),XY(2,1)])
-  try {
-    board.revealCell(XY(0,0))
-    board.revealCell(XY(1,1))
-    board.revealCell(XY(0,2))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,0))
+  board.revealCellEffectless(XY(1,1))
+  board.revealCellEffectless(XY(0,2))
   board
 }
 
@@ -177,8 +154,7 @@ B B 2 0
 */
 def surroundedBoard() = {
   var board = buildBoard(4, 4, [XY(0,1),XY(1,1),XY(1,0)])
-  try {board.revealCell(XY(3,0))}
-  with GameOver {()}
+  board.revealCellEffectless(XY(3,0))
   board
 }
 
@@ -190,11 +166,8 @@ B ? ?
 */
 def countBoard1() = {
   var board = buildBoard(4, 3, [XY(0,0),XY(1,1),XY(0,2),XY(2,3)])
-  try {
-    board.revealCell(XY(0,1))
-    board.revealCell(XY(0,3))
-    board.revealCell(XY(2,0))
-  }
-  with GameOver {()}
+  board.revealCellEffectless(XY(0,1))
+  board.revealCellEffectless(XY(0,3))
+  board.revealCellEffectless(XY(2,0))
   board
 }

@@ -1,8 +1,8 @@
 import src/utils
 
-effect Reveal(cell: (Int,Int)): Unit
+effect Revealing(cell: XY): Unit
+effect Flagging(cell: XY): Unit
 effect GameOver(): Unit
-effect Flag(cell: (Int,Int)): Unit
 effect Won(): Unit
 
 // for resuming with each value with each()
@@ -78,18 +78,31 @@ def hideHiddenInfo(board: Board): Unit =
     }
   }
 
-def revealCell(board: Board, xy: XY): Unit / {GameOver} = {
+def revealCell(board: Board, xy: XY, og: Bool): Unit / {GameOver, Won, Revealing} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
       if (hasMine) do GameOver()
+      if (og) do Revealing(xy)
       else {
         val adjMines = countAdjacentMines(board, xy)
         board.setCell(xy, Revealed(adjMines))
         if (adjMines == 0) revealAdjacentCells(board, xy)
       }
+      val hidden = board.getXY{
+        case Hidden(_,_) => true
+        case _ => false
+      }
+      if (hidden.size == board.mines) do Won()
     case _ => ()
   }
+}
+def revealCell(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = board.revealCell(xy,false)
+def revealCellEffectless(board: Board, xy: XY): Unit / {} = {
+  try {board.revealCell(xy)}
+  with GameOver {()}
+  with Won {()}
+  with Revealing {_ => resume(())}
 }
 
 def countAdjacentMines(board: Board, xy: XY): Int = {
@@ -124,7 +137,7 @@ def getRevealedNeighbors(board: Board, xy: XY): List[XY] = {
   }
 }
 
-def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver} = {
+def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = {
   board.getNeighbors(xy, 1).foreach{ xy => board.revealCell(xy) }
 }
 
@@ -145,14 +158,18 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
   return buildBoard(rows, cols, cells)
 }
 
-def flagCell(board: Board, xy: XY): Board / {} = {
+def flagCell(board: Board, xy: XY): Unit / {Flagging} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, isFlagged) =>
+      do Flagging(xy)
       board.setCell(xy, Hidden(hasMine, not(isFlagged)))
     case Revealed(_) =>
       println("Cannot flag a revealed cell!")
     case _ => <>
   }
-  board
+}
+def flagCellEffectless(board: Board, xy: XY): Unit / {} = {
+  try {board.flagCell(xy)}
+  with Flagging {_ => resume(())}
 }

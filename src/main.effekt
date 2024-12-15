@@ -5,36 +5,33 @@ import src/board
 import src/utils
 
 def main() = {
-  var board = initializeBoard(10, 10, 10)
+  var board = initializeBoard(4, 4, 3)
   println(clear())
 
-  try {
-    playGame(board)
-  } with Reveal { case (row,col) =>
-    println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    try {
-      revealCell(board, XY(row, col))
-      resume(())}
-    with GameOver {println("Game Over! You hit a mine.")}
+  try {playGame(board)}
+  with GameOver {println("Game Over! You hit a mine.")}
+  with Won {println("You WON!")}
+  with Revealing { xy =>
+    println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
+    resume(())
   }
-  with Flag { case (row, col) =>
-    println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    flagCell(board, XY(row, col))
+  with Flagging { xy =>
+    println("Flagging cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
   }
   println("over")
 }
 
-def playGame(board: Board): Unit / {Flag, Reveal} = {
-  with on[WrongFormat].panic
+def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
   val board = board
   while (true) {
     println(board, false)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
     println(clear())
+    with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
     input.split(" ") match {
-      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
-      case Cons("f", Cons(x, Cons(y, _))) => do Flag((y.toInt, x.toInt))
+      case Cons("r", Cons(x, Cons(y, _)))  => board.revealCell(XY(x.toInt, y.toInt), true)
+      case Cons("f", Cons(x, Cons(y, _))) => board.flagCell(XY(x.toInt, y.toInt))
       case _ => println("Invalid input. Try again.")
     }
   }
