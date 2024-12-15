@@ -8,8 +8,11 @@ import src/solver
 effect QuantumMine(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
-  val board = board.copy
   board.hideHiddenInfo
+  val numbers = board.getXY{
+    case Revealed(_) => true
+    case _ => false
+  }
   val hidden = board.getXY{
     case TrueHidden() => true
     case _ => false
@@ -30,11 +33,12 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)
-      valid = curBoard.isValid(xy, minMines, false)
+      valid = curBoard.isValid(xy){(count, mineAmt) => count >= mineAmt}
       if (not(valid)) ctrl.break
     }
     if (valid && curBoard.getMines.size >= minMines) {
-      validBoards = validBoards.append([curBoard.getMines])
+      valid = numbers.all{ xy => curBoard.isValid(xy){(count, mineAmt) => count == mineAmt}}
+      if (valid) validBoards = validBoards.append([curBoard.getMines])
     }
   } with QuantumMine { (xy, board) =>
     board.setCell(xy, Mine())
@@ -69,10 +73,10 @@ def getMines(board: Board): List[XY] =
     }
   }
 
-def isValid(board: Board, xy: XY, minMines: Int, final: Bool): Bool = {
+def isValid(board: Board, xy: XY){comp: (Int,Int) => Bool}: Bool = {
   board.getRevealedNeighbors(xy).all{ xy =>
     board.getCell(xy) match {
-      case Revealed(c) => c >= board.mineCount(xy)
+      case Revealed(c) => comp(c, board.mineCount(xy))
       case _ => println("How did we get here"); <>
     }
   }
