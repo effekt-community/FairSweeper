@@ -49,7 +49,7 @@ def main() = {
       }
       with Revealing {_ => resume(())}
     }
-    println(init.formatMs)
+    println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
   }
   println(wins)

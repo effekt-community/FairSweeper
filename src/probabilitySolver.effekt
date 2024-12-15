@@ -24,19 +24,23 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenAway = par.second
   val minMines = curBoard.mines - hiddenAway.size
   var validBoards: List[List[XY]] = empty()
+  var depth = 0
   try {
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)
       valid = curBoard.isValid(xy)
       if (not(valid)) ctrl.break
+      println(depth)
     }
     if (valid && curBoard.getMines.size >= minMines) {
       if (valid) validBoards = validBoards.append([curBoard.getMines])
     }
   } with QuantumMine { (xy, board) =>
     board.setCell(xy, -2)
+    depth = depth + 1
     resume(board.copy)
+    depth = depth - 1
     board.setCell(xy, -3)
     resume(board)
   }
