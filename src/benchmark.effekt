@@ -10,7 +10,7 @@ import src/probabilitySolver
 // Intermediate: 59/100, 121/200, 127/200
 // Expert:
 def main() = {
-  val games = 10
+  val games = 1000
   // val cols = 30
   // val rows = 16
   // val mines = 99
@@ -19,7 +19,7 @@ def main() = {
   var wins = 0
   each(0, games) { _ =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    val init = timed{board = expertBoard()}
+    val init = timed{board = intermediateBoard()}
     println("Initialized")
     val solving = timed{
       try {while (true) {

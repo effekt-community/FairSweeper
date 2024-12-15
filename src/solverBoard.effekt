@@ -12,31 +12,31 @@ effect Offset(start: Int, end: Int): Int
   -3 : no mine
   other : undefined/error
 */
-record SBoard(grid: Array[Array[Int]], mines: Int)
+record SBoard(grid: List[List[Int]], mines: Int)
 
 def getCell(board: SBoard, xy: XY): Int = {
   with on[OutOfBounds].panic
-  return board.grid.get(xy.y).get(xy.x)
+  board.grid.get(xy.y).get(xy.x)
 }
 
-def setCell(board: SBoard, xy: XY, new_val: Int): Unit = {
+def setCell(board: SBoard, xy: XY, new_val: Int): SBoard = {
   with on[OutOfBounds].panic
-  board.grid.get(xy.y).set(xy.x, new_val)
+  SBoard(board.grid.updateAt(xy.y){row => row.updateAt(xy.x) {_ => new_val}}, board.mines)
 }
 
 def fromBoard(board: Board): SBoard = {
   with on[OutOfBounds].panic
-  val grid: Array[Array[Int]] = allocate(board.rows)
+  var grid: List[List[Int]] = empty()
   each(0,board.rows){ row =>
-    grid.set(row, allocate(board.cols))
+    grid = grid.append([[]])
     each(0,board.cols) { col =>
-      grid.get(row).set(col,
-        board.getCell(XY(col,row)) match {
+      grid = grid.updateAt(row){ r => r.append(
+        [board.getCell(XY(col,row)) match {
           case Revealed(v) => v
           case Hidden(_,_) => -1
           case _ => -4
-        }
-      )
+        }])
+      }
     }
   }
   SBoard(grid, board.mines)
@@ -61,7 +61,7 @@ def getXY(board: SBoard) {f: Int => Bool}: List[XY] = {
 }
 
 def foreach(board: SBoard) {f: (XY, Int) => Unit}: Unit = {
-  with on[OutOfBounds].panic
+  with on[OutOfBounds].default{() => println("Error at foreach")}
   try {
     val x = do Offset(0, board.grid.get(0).size)
     val y = do Offset(0, board.grid.size)
@@ -73,21 +73,16 @@ def foreach(board: SBoard) {f: (XY, Int) => Unit}: Unit = {
   }
 }
 
-def copy(board: SBoard): SBoard = {
-  with on[OutOfBounds].panic
-  var newGrid = board.grid.copy
-  newGrid.foreachIndex{ (index,row) =>
-    newGrid.set(index,row.copy)
-  }
-  SBoard(newGrid, board.mines)
-}
+def copy(board: SBoard): SBoard = SBoard(board.grid, board.mines)
+
 
 def println(board: SBoard, showBombs: Bool): Unit = {
+  with on[OutOfBounds].panic
   var str = ""
   var counter = 0
   // str = str ++ "\n"
   str = str ++ "*|"
-  each(0, board.grid.size) {n => str = str ++ n.mod(10).show ++ "|"}
+  each(0, board.grid.get(0).size) {n => str = str ++ n.mod(10).show ++ "|"}
   foreach(board.grid) {row =>
     str = str ++ "\n"
     str = str ++ counter.mod(10).show ++ "|"

@@ -6,6 +6,7 @@ import src/board
 import src/boards
 import src/solver
 import src/probabilitySolver
+import src/solverBoard
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
@@ -117,13 +118,20 @@ def solverTests(){f: (Board) => (List[XY],List[XY])} = {
   test("SolveSubsetMap1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2)){f}}
   test("SolveSubsetMap2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2)){f}}
   test("SolveSubsetMap3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1)){f}}
-  test("SolveSubsetMap4"){testSolver(subsetBoard4(), 0){f}}
+  test("SolveSubsetMap4"){testSolver(subsetBoard4(), 1, XY(3,0), XY(-1,-1)){f}}
   test("SolveSubsetMap5"){testSolver(subsetBoard5(), 0){f}}
   test("SolveDifferenceMap1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2)){f}}
   test("SolveDifferenceMap2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0)){f}}
   test("SolveDifferenceMap3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0)){f}}
   test("SolveDifferenceMap4"){testSolver(differenceBoard4(), 0, XY(0,2)){f}}
   test("SolveCountMap1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0)){f}}
+}
+
+// ----------------------------- SBoard ----------------------------
+def testSetCell() = {
+  var board = SBoard([[0]], 0)
+  board = board.setCell(XY(0,0),3)
+  do assert(board.getCell(XY(0,0)) == 3, "Cell should be changed to 3")
 }
 
 // -------------------------------- TESTS ---------------------------------------
@@ -147,6 +155,9 @@ def runTests() = {
       try {board.getMoves}
       with QuickMoves {_ => resume(())}
     }
+  }
+  suite("SBoard") {
+    test("SetCell"){testSetCell()}
   }
   suite("ProbSolver") {
     solverTests{board => board.getProbabilities.getMovesAndMines}

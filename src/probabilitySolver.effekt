@@ -11,7 +11,6 @@ effect QuantumMine(xy: XY, board: SBoard): SBoard
 def getProbabilities(board: Board): List[(XY,Double)] = {
   println("-- Calculating Probability --")
   var curBoard = board.fromBoard
-  curBoard.revealObviousMines
   val numbers = curBoard.getRevealed
   val hidden = curBoard.getXY{
     case -1 => true
@@ -31,18 +30,13 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       curBoard = do QuantumMine(xy, curBoard)
       valid = curBoard.isValid(xy)
       if (not(valid)) ctrl.break
-      println(depth)
     }
     if (valid && curBoard.getMines.size >= minMines) {
       if (valid) validBoards = validBoards.append([curBoard.getMines])
     }
   } with QuantumMine { (xy, board) =>
-    board.setCell(xy, -2)
-    depth = depth + 1
-    resume(board.copy)
-    depth = depth - 1
-    board.setCell(xy, -3)
-    resume(board)
+    resume(board.setCell(xy, -2))
+    resume(board.setCell(xy, -3))
   }
   var counts = CellDict(Nil())
   var hiddenAwayCount = 0
@@ -60,18 +54,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  // println(hiddenAwayCount.toDouble)
+  // println(boardAmount.toDouble)
+  // println(hiddenAway.size.toDouble)
   probs
-}
-
-def revealObviousMines(board: SBoard): Unit = {
-  val numbers = board.getRevealed
-  numbers.foreach{ xy =>
-    board.getCell(xy) match {
-      case v and v >= 0 =>
-        val hdnbs = board.getHiddenNeighbors(xy)
-        val mines = board.getMineNeighbors(xy)
-        if (hdnbs.size + mines.size == v) hdnbs.foreach{xy2 => board.setCell(xy2, -2)}
-      case _ => ()
-    }
-  }
 }
