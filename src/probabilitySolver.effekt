@@ -1,20 +1,20 @@
 module src/probabilitySolver
 
 import src/board
+import src/solverBoard
 import src/utils
 import src/main
 import src/solver
 
-effect QuantumMine(xy: XY, board: Board): Board
+effect QuantumMine(xy: XY, board: SBoard): SBoard
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
   println("-- Calculating Probability --")
-  var curBoard = board.copy
-  curBoard.hideHiddenInfo
+  var curBoard = board.fromBoard
   curBoard.revealObviousMines
   val numbers = curBoard.getRevealed
   val hidden = curBoard.getXY{
-    case TrueHidden() => true
+    case -1 => true
     case _ => false
   }
   val par = hidden.partition{ xy =>
@@ -35,9 +35,9 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       if (valid) validBoards = validBoards.append([curBoard.getMines])
     }
   } with QuantumMine { (xy, board) =>
-    board.setCell(xy, Mine())
+    board.setCell(xy, -2)
     resume(board.copy)
-    board.setCell(xy, NoMine())
+    board.setCell(xy, -3)
     resume(board)
   }
   var counts = CellDict(Nil())
@@ -50,54 +50,23 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   // maybe calculate k over n for hiddenAway and give each mine that value
   val boardAmount = validBoards.size
-  var probs: List[(XY,Double)] = empty()
-  hiddenNearNumber.foreach{ xy =>
+  var probs = hiddenNearNumber.map{ xy =>
     val amt = counts.get(xy)
-    probs = probs.append([(xy,(amt.toDouble/boardAmount.toDouble))])
+    (xy,(amt.toDouble/boardAmount.toDouble))
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
   probs
 }
 
-def getMines(board: Board): List[XY] =
-  board.collect{ (xy,cell) =>
-    cell match {
-      case Mine() => Some(xy)
-      case _ => None()
-    }
-  }
-
-def isValid(board: Board, xy: XY): Bool = {
-  board.getRevealedNeighbors(xy).all{ xy2 =>
-    val mineCheck = board.mineCount(xy2)
-    board.getCell(xy2) match {
-      case Revealed(c) =>
-        if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
-      case _ => println("How did we get here"); <>
-    }
-  }
-}
-
-def mineCount(board: Board, xy: XY): (Int,Bool) = {
-  var noTrueHiddenNbs = true
-  (board.getNeighbors(xy, 1).collect{ xy =>
-    board.getCell(xy) match {
-      case Mine() => Some(true)
-      case TrueHidden() => noTrueHiddenNbs = false; None()
-      case _ => None()
-    }
-  }.size, noTrueHiddenNbs)
-}
-
-def revealObviousMines(board: Board): Unit = {
+def revealObviousMines(board: SBoard): Unit = {
   val numbers = board.getRevealed
   numbers.foreach{ xy =>
     board.getCell(xy) match {
-      case Revealed(c) =>
+      case v and v >= 0 =>
         val hdnbs = board.getHiddenNeighbors(xy)
         val mines = board.getMineNeighbors(xy)
-        if (hdnbs.size + mines.size == c) hdnbs.foreach{xy2 => board.setCell(xy2, Mine())}
+        if (hdnbs.size + mines.size == v) hdnbs.foreach{xy2 => board.setCell(xy2, -2)}
       case _ => ()
     }
   }

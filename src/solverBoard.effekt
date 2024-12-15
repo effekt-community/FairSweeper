@@ -1,0 +1,187 @@
+import src/utils
+
+import src/board
+
+// for resuming with each value with each()
+effect Offset(start: Int, end: Int): Int
+
+/* Values
+ >= 0 : amount of mines
+  -1 : hidden
+  -2 : mine
+  -3 : no mine
+  other : undefined/error
+*/
+record SBoard(grid: Array[Array[Int]], mines: Int)
+
+def getCell(board: SBoard, xy: XY): Int = {
+  with on[OutOfBounds].panic
+  return board.grid.get(xy.y).get(xy.x)
+}
+
+def setCell(board: SBoard, xy: XY, new_val: Int): Unit = {
+  with on[OutOfBounds].panic
+  board.grid.get(xy.y).set(xy.x, new_val)
+}
+
+def fromBoard(board: Board): SBoard = {
+  with on[OutOfBounds].panic
+  val grid: Array[Array[Int]] = allocate(board.rows)
+  each(0,board.rows){ row =>
+    grid.set(row, allocate(board.cols))
+    each(0,board.cols) { col =>
+      grid.get(row).set(col,
+        board.getCell(XY(col,row)) match {
+          case Revealed(v) => v
+          case Hidden(_,_) => -1
+          case _ => -4
+        }
+      )
+    }
+  }
+  SBoard(grid, board.mines)
+}
+
+def collect[A](board: SBoard) {f: (XY, Int) => Option[A]}: List[A] = {
+  var acc: List[A] = empty()
+  board.foreach{ (a,b) =>
+    f(a,b) match {
+      case Some(v) => acc = Cons(v,acc)
+      case None()  => ()
+    }
+  }
+  acc.reverse
+}
+
+def getXY(board: SBoard) {f: Int => Bool}: List[XY] = {
+  board.collect{ (xy, cell) =>
+    if (f(cell)) Some(xy)
+    else None()
+  }
+}
+
+def foreach(board: SBoard) {f: (XY, Int) => Unit}: Unit = {
+  with on[OutOfBounds].panic
+  try {
+    val x = do Offset(0, board.grid.get(0).size)
+    val y = do Offset(0, board.grid.size)
+    val xy = XY(x,y)
+    val cell = board.getCell(xy)
+    f(xy, cell)
+  } with Offset {(s,e) =>
+    each(s,e) {v => resume(v)}
+  }
+}
+
+def copy(board: SBoard): SBoard = {
+  with on[OutOfBounds].panic
+  var newGrid = board.grid.copy
+  newGrid.foreachIndex{ (index,row) =>
+    newGrid.set(index,row.copy)
+  }
+  SBoard(newGrid, board.mines)
+}
+
+def println(board: SBoard, showBombs: Bool): Unit = {
+  var str = ""
+  var counter = 0
+  // str = str ++ "\n"
+  str = str ++ "*|"
+  each(0, board.grid.size) {n => str = str ++ n.mod(10).show ++ "|"}
+  foreach(board.grid) {row =>
+    str = str ++ "\n"
+    str = str ++ counter.mod(10).show ++ "|"
+    counter = counter + 1
+    foreach(row) {elem =>
+      str = str ++ (elem match {
+        case 0  => " "
+        case -1 => "◼"
+        case -2 => "M"
+        case -3 => "N"
+        case i  => i.show
+      }) ++ "|"
+    }
+  }
+  println(str)
+}
+def println(board: SBoard): Unit = println(board, false)
+
+def isValid(board: SBoard, xy: XY): Bool = {
+  board.getRevealedNeighbors(xy).all{ xy2 =>
+    val mineCheck = board.mineCount(xy2)
+    board.getCell(xy2) match {
+      case c and c >= 0 =>
+        if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
+      case _ => println("How did we get here"); <>
+    }
+  }
+}
+
+def mineCount(board: SBoard, xy: XY): (Int,Bool) = {
+  var noTrueHiddenNbs = true
+  (board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case -2 => Some(true)
+      case -1 => noTrueHiddenNbs = false; None()
+      case _ => None()
+    }
+  }.size, noTrueHiddenNbs)
+}
+
+// ------------------------- GETTER ------------------------
+def getRevealedNeighbors(board: SBoard, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case a and a >= 0 => Some(xy)
+      case _ => None()
+    }
+  }
+}
+
+def getHiddenNeighbors(board: SBoard, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case -1 => Some(xy)
+      case _ => None()
+    }
+  }
+}
+
+def getMineNeighbors(board: SBoard, xy: XY): List[XY] = {
+  board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case -2 => Some(xy)
+      case _ => None()
+    }
+  }
+}
+
+def getMines(board: SBoard): List[XY] =
+  board.collect{ (xy,cell) =>
+    cell match {
+      case -2 => Some(xy)
+      case _ => None()
+    }
+  }
+
+def getRevealed(board: SBoard): List[XY] =
+  board.getXY{
+    case a and a >= 0 => true
+    case _ => false
+  }
+
+def getNeighbors(board: SBoard, xy: XY, size: Int): List[XY] = {
+  with on[OutOfBounds].panic
+  var list: List[XY] = empty()
+  try {
+    val dr = do Offset(0 - size, size + 1)
+    val dc = do Offset(0 - size, size + 1)
+    val nr = xy.y + dr
+    val nc = xy.x + dc
+    if ((nr >= 0 && nr < board.grid.size && nc >= 0 && nc < board.grid.get(0).size) and not(equals((dc,dr),(0,0))))
+      list = Cons(XY(nc,nr),list)
+  } with Offset {(s,e) =>
+    each(s,e){v => resume(v)}
+  }
+  list.reverse
+}

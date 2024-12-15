@@ -31,6 +31,23 @@ def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   return board
 }
 
+def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
+  var cells: List[XY] = empty()
+  try {
+    val y = do Offset(0, rows)
+    val x = do Offset(0, cols)
+    cells = cells.append([XY(x,y)])
+  } with Offset {(s,e) =>
+    each(s,e) {v => resume(v)}
+  }
+  while (cells.size > mines) {
+    // +1 so we can also hit the last cell
+    val idx = (random() * (cells.size + 1).toDouble).floor
+    cells = cells.deleteAt(idx)
+  }
+  return buildBoard(rows, cols, cells)
+}
+
 def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
   board.collect{ (xy, cell) =>
     if (f(cell)) Some(xy)
@@ -111,27 +128,76 @@ def countAdjacentMines(board: Board, xy: XY): Int =
     else None()
   }.size
 
-def getRevealed(board: Board): List[XY] =
-  board.getXY{
-    case Revealed(_) => true
-    case _ => false
-  }
-
-def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
-  var list: List[XY] = empty()
-  try {
-    val dr = do Offset(0 - size, size + 1)
-    val dc = do Offset(0 - size, size + 1)
-    val nr = xy.y + dr
-    val nc = xy.x + dc
-    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dc,dr),(0,0))))
-      list = Cons(XY(nc,nr),list)
-  } with Offset {(s,e) =>
-    each(s,e){v => resume(v)}
-  }
-  list.reverse
+def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = {
+  board.getNeighbors(xy, 1).foreach{ xy => board.revealCell(xy) }
 }
 
+def flagCell(board: Board, xy: XY): Unit / {Flagging} = {
+  val cell = board.getCell(xy)
+  cell match {
+    case Hidden(hasMine, isFlagged) =>
+      do Flagging(xy)
+      board.setCell(xy, Hidden(hasMine, not(isFlagged)))
+    case Revealed(_) =>
+      println("Cannot flag a revealed cell!")
+    case _ => <>
+  }
+}
+def flagCellEffectless(board: Board, xy: XY): Unit / {} = {
+  try {board.flagCell(xy)}
+  with Flagging {_ => resume(())}
+}
+
+def println(board: Board, showBombs: Bool): Unit = {
+  var str = ""
+  var counter = 0
+  // str = str ++ "\n"
+  str = str ++ "*|"
+  each(0, board.cols) {n => str = str ++ n.mod(10).show ++ "|"}
+  foreach(board.grid) {row =>
+    str = str ++ "\n"
+    str = str ++ counter.mod(10).show ++ "|"
+    counter = counter + 1
+    foreach(row) {elem =>
+      str = str ++ (elem match {
+        case Hidden(true, _) and showBombs      => "B"
+        case Hidden(_, true)                    => "F"
+        case Hidden(_, false)                   => "◼"
+        case Revealed(count) and (count > 0)    => count.show
+        case Revealed(_)                        => " "
+        case NoMine()                           => "N"
+        case Mine()                             => "M"
+        case TrueHidden()                       => "T"
+      }) ++ "|"
+    }
+  }
+  println(str)
+}
+def println(board: Board): Unit = println(board, false)
+
+def isValid(board: Board, xy: XY): Bool = {
+  board.getRevealedNeighbors(xy).all{ xy2 =>
+    val mineCheck = board.mineCount(xy2)
+    board.getCell(xy2) match {
+      case Revealed(c) =>
+        if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
+      case _ => println("How did we get here"); <>
+    }
+  }
+}
+
+def mineCount(board: Board, xy: XY): (Int,Bool) = {
+  var noTrueHiddenNbs = true
+  (board.getNeighbors(xy, 1).collect{ xy =>
+    board.getCell(xy) match {
+      case Mine() => Some(true)
+      case TrueHidden() => noTrueHiddenNbs = false; None()
+      case _ => None()
+    }
+  }.size, noTrueHiddenNbs)
+}
+
+// ------------------------- GETTER ------------------------
 def getRevealedNeighbors(board: Board, xy: XY): List[XY] = {
   board.getNeighbors(xy, 1).collect{ xy =>
     board.getCell(xy) match {
@@ -159,66 +225,31 @@ def getMineNeighbors(board: Board, xy: XY): List[XY] = {
   }
 }
 
-def revealAdjacentCells(board: Board, xy: XY): Unit / {GameOver, Won, Revealing} = {
-  board.getNeighbors(xy, 1).foreach{ xy => board.revealCell(xy) }
-}
-
-def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
-  var cells: List[XY] = empty()
-  try {
-    val y = do Offset(0, rows)
-    val x = do Offset(0, cols)
-    cells = cells.append([XY(x,y)])
-  } with Offset {(s,e) =>
-    each(s,e) {v => resume(v)}
-  }
-  while (cells.size > mines) {
-    // +1 so we can also hit the last cell
-    val idx = (random() * (cells.size + 1).toDouble).floor
-    cells = cells.deleteAt(idx)
-  }
-  return buildBoard(rows, cols, cells)
-}
-
-def flagCell(board: Board, xy: XY): Unit / {Flagging} = {
-  val cell = board.getCell(xy)
-  cell match {
-    case Hidden(hasMine, isFlagged) =>
-      do Flagging(xy)
-      board.setCell(xy, Hidden(hasMine, not(isFlagged)))
-    case Revealed(_) =>
-      println("Cannot flag a revealed cell!")
-    case _ => <>
-  }
-}
-def flagCellEffectless(board: Board, xy: XY): Unit / {} = {
-  try {board.flagCell(xy)}
-  with Flagging {_ => resume(())}
-}
-
-def println(board: Board, showBombs: Bool): Unit = {
-  var str = ""
-  var counter = 0
-  // str = str ++ "\n"
-  str = str ++ "*|"
-  each(0, board.cols) {n => str = str ++ show(n.mod(10)) ++ "|"}
-  foreach(board.grid) {row =>
-    str = str ++ "\n"
-    str = str ++ show(counter) ++ "|"
-    counter = counter + 1
-    foreach(row) {elem =>
-      str = str ++ (elem match {
-        case Hidden(true, _) and showBombs      => "B"
-        case Hidden(_, true)                    => "F"
-        case Hidden(_, false)                   => "◼"
-        case Revealed(count) and (count > 0)    => count.show
-        case Revealed(_)                        => " "
-        case NoMine()                           => "N"
-        case Mine()                             => "M"
-        case TrueHidden()                       => "T"
-      }) ++ "|"
+def getMines(board: Board): List[XY] =
+  board.collect{ (xy,cell) =>
+    cell match {
+      case Mine() => Some(xy)
+      case _ => None()
     }
   }
-  println(str)
+
+def getRevealed(board: Board): List[XY] =
+  board.getXY{
+    case Revealed(_) => true
+    case _ => false
+  }
+
+def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
+  var list: List[XY] = empty()
+  try {
+    val dr = do Offset(0 - size, size + 1)
+    val dc = do Offset(0 - size, size + 1)
+    val nr = xy.y + dr
+    val nc = xy.x + dc
+    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dc,dr),(0,0))))
+      list = Cons(XY(nc,nr),list)
+  } with Offset {(s,e) =>
+    each(s,e){v => resume(v)}
+  }
+  list.reverse
 }
-def println(board: Board): Unit = println(board, false)

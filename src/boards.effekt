@@ -5,7 +5,7 @@ import src/utils
 
 def beginnerBoard() = initializeBoard(9,9,10)
 def intermediateBoard() = initializeBoard(16,16,40)
-def expertBoard() = initializeBoard(30,16,99)
+def expertBoard() = initializeBoard(16,30,99)
 
 /*
 0 0 0 0

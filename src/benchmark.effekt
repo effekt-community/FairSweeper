@@ -7,10 +7,10 @@ import src/solver
 import src/probabilitySolver
 
 // Beginner: 753/1000
-// Intermediate: 59/100, 121/200
+// Intermediate: 59/100, 121/200, 127/200
 // Expert:
 def main() = {
-  val games = 200
+  val games = 10
   // val cols = 30
   // val rows = 16
   // val mines = 99
@@ -19,7 +19,7 @@ def main() = {
   var wins = 0
   each(0, games) { _ =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    val init = timed{board = intermediateBoard()}
+    val init = timed{board = expertBoard()}
     println("Initialized")
     val solving = timed{
       try {while (true) {
@@ -42,7 +42,11 @@ def main() = {
         println(move.show)
         println(board)
       }
-      with Won {board => println("------- Won -------"); wins = wins + 1}
+      with Won {board =>
+        println("------- Won -------")
+        println(board)
+        wins = wins + 1
+      }
       with Revealing {_ => resume(())}
     }
     println(init.formatMs)
