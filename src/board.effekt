@@ -169,8 +169,8 @@ def println(board: Board, showBombs: Bool): Unit = {
         case Revealed(count) and (count > 0)    => green(count.show)
         case Revealed(_)                        => " "
         case NoMine()                           => "N"
-        case Mine()                             => "M"
-        case TrueHidden()                       => "T"
+        case Mine()                             => red("M")
+        case TrueHidden()                       => cyan("T")
       }) ++ "|"
     }
   }

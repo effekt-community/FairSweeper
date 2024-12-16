@@ -22,6 +22,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     curBoard.getRevealedNeighbors(xy).size > 0
   }
   val hiddenNearNumber = par.first
+  println(curBoard)
+  println(hiddenNearNumber)
   val hiddenAway = par.second
   val minMines = curBoard.mines - hiddenAway.size
   var counts = CellDict(Nil())

@@ -48,7 +48,7 @@ def removeDuplicates(list: List[XY]) =
 def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
 
 def println(xys: List[XY]): Unit = {
-  xys.foreach{xy => println(xy.show)}
+  println(xys.foldRight(""){(xy,acc) => xy.show ++ ", " ++ acc})
 }
 
 def isSubset(subset: List[XY], set: List[XY]): Bool = {
