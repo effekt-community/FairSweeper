@@ -17,53 +17,40 @@ def main() = {
   var board = initializeBoard(0, 0, 0)
 
   var wins = 0
-  // each(0, games) { _ =>
-  //   // val init = timed{board = initializeBoard(rows,cols,mines)}
-  //   val init = timed{board = expertBoard()}
-  //   println("Initialized")
-  //   val solving = timed{
-  //     try {while (true) {
-  //       val probs = board.getProbabilities
-  //       val moves = probs.getMovesAndMines.first
-  //       if (moves.size > 0) moves.foreach{ xy => board.revealCell(xy)}
-  //       else {
-  //         var move = (XY(-1,-1),2.0)
-  //         probs.foreach {case (xy,prob) =>
-  //           if (prob < move.second) move = (xy,prob)
-  //         }
-  //         if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
-  //         board.revealCell(move.first)
-  //         // println(board)
-  //         println("Guessed: " ++ move.first.show)
-  //       }
-  //     }}
-  //     with GameOver {(board,move) =>
-  //       println("------- Lost ------")
-  //       println(move.show)
-  //       println(board)
-  //     }
-  //     with Won {board =>
-  //       println("------- Won -------")
-  //       println(board)
-  //       wins = wins + 1
-  //     }
-  //     with Revealing {_ => resume(())}
-  //   }
-  //   println("Initilization: " ++ init.formatMs)
-  //   println("Solving: " ++ solving.formatMs)
-  // }
-  // println(wins.show ++ "/" ++ games.show)
-  val arr: Array[Cell] = array(10000, TrueHidden())
-  var list: List[Cell] = fill(10000, TrueHidden())
-  with on[OutOfBounds].panic
-  val a = timed{each(0, 10000){ _ =>
-    arr.get((random() * (100.0)).floor)
-  arr.set((random() * (100.0)).floor, Mine())
-  }}
-  val l = timed{each(0, 10000){ _ =>
-    list.get((random() * (100.0)).floor)
-    list = list.updateAt((random() * (100.0)).floor){_ => Mine()}
-  }}
-  println(a.formatMs)
-  println(l.formatMs)
+  each(0, games) { _ =>
+    // val init = timed{board = initializeBoard(rows,cols,mines)}
+    val init = timed{board = expertBoard()}
+    println("Initialized")
+    val solving = timed{
+      try {while (true) {
+        val probs = board.getProbabilities
+        val moves = probs.getMovesAndMines.first
+        if (moves.size > 0) moves.foreach{ xy => board.revealCell(xy)}
+        else {
+          var move = (XY(-1,-1),2.0)
+          probs.foreach {case (xy,prob) =>
+            if (prob < move.second) move = (xy,prob)
+          }
+          if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
+          board.revealCell(move.first)
+          // println(board)
+          println("Guessed: " ++ move.first.show)
+        }
+      }}
+      with GameOver {(board,move) =>
+        println("------- Lost ------")
+        println(move.show)
+        println(board)
+      }
+      with Won {board =>
+        println("------- Won -------")
+        println(board)
+        wins = wins + 1
+      }
+      with Revealing {_ => resume(())}
+    }
+    println("Initilization: " ++ init.formatMs)
+    println("Solving: " ++ solving.formatMs)
+  }
+  println(wins.show ++ "/" ++ games.show)
 }

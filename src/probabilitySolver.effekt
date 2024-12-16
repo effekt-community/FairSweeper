@@ -6,15 +6,16 @@ import src/utils
 import src/main
 import src/solver
 
-effect QuantumMine(xy: XY, board: SBoard): SBoard
+effect QuantumMine(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
   println("-- Calculating Probability --")
   println(board)
-  var curBoard = board.fromBoard
+  var curBoard = board.copy
+  curBoard.hideHiddenInfo
   val numbers = curBoard.getRevealed
   val hidden = curBoard.getXY{
-    case -1 => true
+    case TrueHidden() => true
     case _ => false
   }
   val par = hidden.partition{ xy =>
@@ -46,8 +47,10 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       }
     }
   } with QuantumMine { (xy, board) =>
-    resume(board.setCell(xy, -3))
-    resume(board.setCell(xy, -2))
+    board.setCell(xy, NoMine())
+    resume(board.copy)
+    board.setCell(xy, Mine())
+    resume(board)
   }
   // maybe calculate k over n for hiddenAway and give each mine that value
   var probs = hiddenNearNumber.map{ xy =>
