@@ -26,12 +26,12 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   var counts = CellDict(Nil())
   var hiddenAwayCount = 0
   var boardAmount = 0
-  // var mineAmt = 0
+  var mineAmt = 0
   try {
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)
-      valid = curBoard.isValid(xy)// && board.mines >= mineAmt
+      valid = curBoard.isValid(xy) && board.mines >= mineAmt
       if (not(valid)) ctrl.break
     }
     if (valid && curBoard.getMines.size >= minMines) {
@@ -50,9 +50,9 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     board.setCell(xy, NoMine())
     resume(board.copy)
     board.setCell(xy, Mine())
-    // mineAmt = mineAmt + 1
+    mineAmt = mineAmt + 1
     resume(board)
-    // mineAmt = mineAmt - 1
+    mineAmt = mineAmt - 1
   }
   // maybe calculate n over k for hiddenAway and give each mine that value
   var probs = hiddenNearNumber.map{ xy =>
