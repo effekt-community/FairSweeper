@@ -7,19 +7,19 @@ import src/solver
 import src/probabilitySolver
 
 // Beginner: 753/1000
-// Intermediate: 578/1000
-// Expert:
+// Intermediate: 578/1000, ca. 4 min: 598/1000, 267006.66ms 604/1000
+// Expert: 27/100
 def main() = {
-  val games = 100
+  val games = 1000
   // val cols = 30
   // val rows = 16
   // val mines = 99
   var board = initializeBoard(0, 0, 0)
 
   var wins = 0
-  each(0, games) { _ =>
+  val total = timed{each(0, games) { _ =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    val init = timed{board = expertBoard()}
+    val init = timed{board = intermediateBoard()}
     println("Initialized")
     val solving = timed{
       try {while (true) {
@@ -51,6 +51,7 @@ def main() = {
     }
     println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
-  }
+  }}
+  println("Total time taken: " ++ total.formatMs)
   println(wins.show ++ "/" ++ games.show)
 }

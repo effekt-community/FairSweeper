@@ -181,7 +181,6 @@ def println(board: Board): Unit = println(board, false)
 def isValid(board: Board, xy: XY): Bool = {
   board.getRevealedNeighbors(xy).all{ xy2 =>
     val mineCheck = board.mineCount(xy2)
-    // println(mineCheck.second)
     board.getCell(xy2) match {
       case Revealed(c) =>
         if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
