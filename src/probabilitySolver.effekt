@@ -1,7 +1,6 @@
 module src/probabilitySolver
 
 import src/board
-import src/solverBoard
 import src/utils
 import src/main
 import src/solver
@@ -24,21 +23,22 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenNearNumber = par.first
   val hiddenAway = par.second
   val minMines = curBoard.mines - hiddenAway.size
-  var depth = 0
   var counts = CellDict(Nil())
   var hiddenAwayCount = 0
   var boardAmount = 0
+  // var mineAmt = 0
   try {
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       curBoard = do QuantumMine(xy, curBoard)
-      valid = curBoard.isValid(xy)
+      valid = curBoard.isValid(xy)// && board.mines >= mineAmt
       if (not(valid)) ctrl.break
     }
     if (valid && curBoard.getMines.size >= minMines) {
       if (valid) {
+        // println("-----------")
+        // println(curBoard)
         boardAmount = boardAmount + 1
-        // println(boardAmount)
         val posbMines = curBoard.getMines
         hiddenAwayCount = hiddenAwayCount + board.mines - posbMines.size
         posbMines.foreach{ xy =>
@@ -50,15 +50,18 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     board.setCell(xy, NoMine())
     resume(board.copy)
     board.setCell(xy, Mine())
+    // mineAmt = mineAmt + 1
     resume(board)
+    // mineAmt = mineAmt - 1
   }
-  // maybe calculate k over n for hiddenAway and give each mine that value
+  // maybe calculate n over k for hiddenAway and give each mine that value
   var probs = hiddenNearNumber.map{ xy =>
     val amt = counts.get(xy)
     (xy,(amt.toDouble/boardAmount.toDouble))
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  println("Valid Boards: " ++ boardAmount.show)
   // println(hiddenAwayCount.toDouble)
   // println(boardAmount.toDouble)
   // println(hiddenAway.size.toDouble)

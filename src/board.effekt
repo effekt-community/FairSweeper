@@ -1,3 +1,5 @@
+import tty
+
 import src/utils
 
 effect Revealing(cell: XY): Unit
@@ -154,6 +156,7 @@ def println(board: Board, showBombs: Bool): Unit = {
   // str = str ++ "\n"
   str = str ++ "*|"
   each(0, board.cols) {n => str = str ++ n.mod(10).show ++ "|"}
+  with Formatted::formatting
   foreach(board.grid) {row =>
     str = str ++ "\n"
     str = str ++ counter.mod(10).show ++ "|"
@@ -161,9 +164,9 @@ def println(board: Board, showBombs: Bool): Unit = {
     foreach(row) {elem =>
       str = str ++ (elem match {
         case Hidden(true, _) and showBombs      => "B"
-        case Hidden(_, true)                    => "F"
-        case Hidden(_, false)                   => "◼"
-        case Revealed(count) and (count > 0)    => count.show
+        case Hidden(_, true)                    => red("F")
+        case Hidden(_, false)                   => yellow("◼")
+        case Revealed(count) and (count > 0)    => green(count.show)
         case Revealed(_)                        => " "
         case NoMine()                           => "N"
         case Mine()                             => "M"
@@ -178,6 +181,7 @@ def println(board: Board): Unit = println(board, false)
 def isValid(board: Board, xy: XY): Bool = {
   board.getRevealedNeighbors(xy).all{ xy2 =>
     val mineCheck = board.mineCount(xy2)
+    // println(mineCheck.second)
     board.getCell(xy2) match {
       case Revealed(c) =>
         if (mineCheck.second) c == mineCheck.first else c >= mineCheck.first
