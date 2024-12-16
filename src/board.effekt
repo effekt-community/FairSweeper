@@ -12,7 +12,7 @@ record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
 def getCell(board: Board, xy: XY): Cell = {
   with on[OutOfBounds].panic
-  return board.grid.get(xy.y).get(xy.x)
+  board.grid.get(xy.y).get(xy.x)
 }
 
 def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
@@ -28,7 +28,7 @@ def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   }
   val board = Board(grid, rows, cols, mines.size())
   mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
-  return board
+  board
 }
 
 def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
@@ -45,7 +45,7 @@ def initializeBoard(rows: Int, cols: Int, mines: Int): Board = {
     val idx = (random() * (cells.size + 1).toDouble).floor
     cells = cells.deleteAt(idx)
   }
-  return buildBoard(rows, cols, cells)
+  buildBoard(rows, cols, cells)
 }
 
 def getXY(board: Board) {f: Cell => Bool}: List[XY] = {
@@ -95,12 +95,12 @@ def hideHiddenInfo(board: Board): Unit =
     }
   }
 
-def revealCell(board: Board, xy: XY, og: Bool): Unit / {GameOver, Won, Revealing} = {
+def revealCell(board: Board, xy: XY, eff: Bool): Unit / {GameOver, Won, Revealing} = {
   val cell = board.getCell(xy)
   cell match {
     case Hidden(hasMine, _) =>
+      if (eff) do Revealing(xy)
       if (hasMine) do GameOver(board, xy)
-      if (og) do Revealing(xy)
       else {
         val adjMines = countAdjacentMines(board, xy)
         board.setCell(xy, Revealed(adjMines))

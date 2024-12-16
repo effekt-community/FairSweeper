@@ -37,7 +37,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     if (valid && curBoard.getMines.size >= minMines) {
       if (valid) {
         boardAmount = boardAmount + 1
-        println(boardAmount)
+        // println(boardAmount)
         val posbMines = curBoard.getMines
         hiddenAwayCount = hiddenAwayCount + board.mines - posbMines.size
         posbMines.foreach{ xy =>

@@ -73,9 +73,6 @@ def foreach(board: SBoard) {f: (XY, Int) => Unit}: Unit = {
   }
 }
 
-def copy(board: SBoard): SBoard = SBoard(board.grid, board.mines)
-
-
 def println(board: SBoard, showBombs: Bool): Unit = {
   with on[OutOfBounds].panic
   var str = ""

@@ -1,16 +1,18 @@
 module main // must be named same as the file!
 
 import io/console
+import tty
+
 import src/board
 import src/utils
 
 def main() = {
   var board = initializeBoard(4, 4, 3)
-  println(clear())
+  println(Screen::clear())
 
   try {playGame(board)}
   with GameOver {(_,_) => println("Game Over! You hit a mine.")}
-  with Won {_ => println("You WON!")}
+  with Won {_ => println("You WON!"); println(board)}
   with Revealing { xy =>
     println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
@@ -23,14 +25,14 @@ def main() = {
 }
 
 def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
-  val board = board
   while (true) {
-    println(board, false)
+    println(board)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
-    println(clear())
+    println(Screen::clear())
     with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
     input.split(" ") match {
-      case Cons("r", Cons(x, Cons(y, _)))  => board.revealCell(XY(x.toInt, y.toInt), true)
+      // todo xy must be largereq 0 and lesseq board.rows/cols
+      case Cons("r", Cons(x, Cons(y, _))) => board.revealCell(XY(x.toInt, y.toInt), true)
       case Cons("f", Cons(x, Cons(y, _))) => board.flagCell(XY(x.toInt, y.toInt))
       case _ => println("Invalid input. Try again.")
     }
@@ -41,15 +43,4 @@ def askUser(prompt: String): String = {
   with console
   println(prompt)
   do readLine()
-}
-
-namespace Escape {
-  val CSI = "\u001b["
-  def escape(s: String): String = CSI ++ s
-  def cursorPosition(x: Int, y: Int): String = escape(y.show ++ ";" ++ x.show ++ "H")
-  def eraseDisplay(x: Int): String = escape(x.show ++ "J")
-}
-
-def clear(): String = {
-  Escape::eraseDisplay(2) ++ Escape::cursorPosition(1, 1)
 }
