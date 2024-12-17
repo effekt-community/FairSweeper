@@ -6,8 +6,8 @@ import src/boards
 import src/solver
 import src/probabilitySolver
 
-// Beginner: 753/1000
-// Intermediate: 578/1000, ca. 4 min: 598/1000, 267006.66ms 604/1000
+// Beginner: 753/1000, 21542.50ms 775/1000
+// Intermediate: 578/1000, ca. 4 min: 598/1000, 267006.66ms 604/1000, 230606.24ms 645/1000
 // Expert: 27/100
 def main() = {
   val games = 1000

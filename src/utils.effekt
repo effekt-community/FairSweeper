@@ -1,25 +1,6 @@
-// -------------------------- Other ----------------------------
+// ---------------------- Definitions ----------------------------
 effect Return[A](v: A): Unit
-
-// -------------------------- Cell ------------------------------
-type Cell {
-  Hidden(hasMine: Bool, isFlagged: Bool)
-  Revealed(adjacentMines: Int)
-  // Helper for solver
-  TrueHidden()
-  Mine()
-  NoMine()
-}
-
-def infixEq(left: Cell, right: Cell): Bool =
-  (left, right) match {
-    case (Hidden(l1,l2),Hidden(r1,r2)) => l1==r1 && l2==r2
-    case (Revealed(l),Revealed(r)) => l==r
-    case (TrueHidden(),TrueHidden()) => true
-    case (Mine(),Mine()) => true
-    case (NoMine(),NoMine()) => true
-    case _ => false
-  }
+extern type BigInt
 
 // --------------------------- XY --------------------------------
 record XY(x: Int, y: Int)
@@ -82,24 +63,113 @@ def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
   (moves,mines)
 }
 
-// ----------------------- CellDict ---------------------------
-record CellDict(items: List[(XY,Int)])
 
-def get(dict: CellDict, key: XY): Int = {
+// -------------------------- Cell ------------------------------
+type Cell {
+  Hidden(hasMine: Bool, isFlagged: Bool)
+  Revealed(adjacentMines: Int)
+  // Used for solver
+  TrueHidden()
+  Mine()
+  NoMine()
+  Relevant()
+}
+
+def infixEq(left: Cell, right: Cell): Bool =
+  (left, right) match {
+    case (Hidden(l1,l2),Hidden(r1,r2)) => l1==r1 && l2==r2
+    case (Revealed(l),Revealed(r)) => l==r
+    case (TrueHidden(),TrueHidden()) => true
+    case (Mine(),Mine()) => true
+    case (NoMine(),NoMine()) => true
+    case _ => false
+  }
+
+// ----------------------- CellDict ---------------------------
+record CellDict[A](items: List[(XY,A)], default: A)
+
+def get[A](dict: CellDict[A], key: XY): A =
   try {
     dict.items.foreach{ case (k,v) =>
       if (k == key) do Return(v)
     }
-    0
-  } with Return[Int] {v => v}
-}
+    dict.default
+  } with Return[A] {v => v}
 
-def set(dict: CellDict, key: XY, newV: Int): CellDict = {
+def set[A](dict: CellDict[A], key: XY, newV: A): CellDict[A] = {
   var found = false
   var items = dict.items.map{case (k,v) =>
     if (k == key) {found = true; (k,newV)}
     else (k,v)
   }
   if (not(found)) items = items.append([(key,newV)])
-  CellDict(items)
+  CellDict(items, dict.default)
 }
+
+// -------------------------- FFI ------------------------------
+
+// ------------------------ BigInt ------------------------------
+def show(v: BigInt): String = v.toDouble.show
+
+extern pure def bigInt(num: Int): BigInt =  js "BigInt(${num})"
+extern pure def bigInt(num: Double): BigInt =  js "BigInt(${num})"
+
+extern pure def toInt(bigInt: BigInt): Int = js "Number(${bigInt})"
+extern pure def toDouble(bigInt: BigInt): Double = js "Number(${bigInt})"
+
+extern pure def infixDiv(x: BigInt, y: BigInt): BigInt = js "(${x}/${y})"
+extern pure def infixMul(x: BigInt, y: BigInt): BigInt = js "(${x}*${y})"
+extern pure def infixAdd(x: BigInt, y: BigInt): BigInt = js "(${x}+${y})"
+extern pure def infixSub(x: BigInt, y: BigInt): BigInt = js "(${x}-${y})"
+extern pure def infixEq(x: BigInt, y: BigInt): BigInt = js "(${x}==${y})"
+
+extern pure def pow(base: BigInt, exp: BigInt): BigInt = js "(${base}}**${exp})"
+
+// https://www.npmjs.com/package/bigint-isqrt?activeTab=code
+extern pure def sqrt(bigInt: BigInt): BigInt = js "sqrt$js(${bigInt})"
+extern js """
+  function sqrt$js(value) {
+    if (value < 2n) {
+      return value;
+    }
+    if (value < 16n) {
+      return BigInt(Math.sqrt(Number(value))|0);
+    }
+      let x0, x1;
+    if(value < 4503599627370496n){//1n<<52n
+      x1 = BigInt(Math.sqrt(Number(value))|0)-3n;
+    } else {
+      let vlen = value.toString().length;
+      if (!(vlen&1)) {
+        x1 = 10n**(BigInt(vlen/2));
+      } else {
+        x1 = 4n*10n**(BigInt((vlen/2)|0));
+      }
+    }
+    do {
+      x0 = x1;
+      x1 = ((value / x0) + x0) >> 1n;
+    }while((x0 !== x1 && x0 !== (x1 - 1n)));
+    return x0;
+  }
+"""
+
+// https://stackoverflow.com/questions/70382306/logarithm-of-a-bigint
+extern pure def log10(bigInt: BigInt): BigInt = js "log10$js(${bigInt})"
+extern js """
+  function log10$js(bigInt) {
+    if (bigInt < 0) return NaN;
+    const s = bigInt.toString(10);
+    return BigInt(s.length + Math.log10("0." + s.substring(0, 15)))
+  }
+"""
+extern pure def log(bigInt: BigInt): BigInt = js "log10$js(${bigInt}) * Math.log(10)"
+extern pure def natlog(bigInt: BigInt): BigInt = js "log10$js(${bigInt}) / Math.log10(Math.E)"
+extern pure def exp(n: BigInt): BigInt = js "Math.exp(${n})"
+def binApprox(n: BigInt, k: BigInt): BigInt = (natlog(n) - natlog(n - k) - natlog(k)).exp
+
+// https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
+extern pure def logApprox(n: Int): Int = js "${n} === 0 ? 0 : (${n} + .5) * Math.log(${n}) - ${n} + 0.9189385332046728 + 0.08333333333333333 / ${n} - 0.002777777777777778 * Math.pow(${n}, -3)"
+extern pure def exp(n: Int): Int = js "Math.exp(${n})"
+extern pure def exp(n: Int): Double = js "Math.exp(${n})"
+def binApprox(n: Int, k: Int): Double = (logApprox(n) - logApprox(n - k) - logApprox(k)).exp

@@ -9,7 +9,7 @@ effect QuantumMine(xy: XY, board: Board): Board
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
   println("-- Calculating Probability --")
-  println(board)
+  // println(board)
   var curBoard = board.copy
   curBoard.hideHiddenInfo
   curBoard.revealObviousMines
@@ -22,13 +22,16 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     curBoard.getRevealedNeighbors(xy).size > 0
   }
   val hiddenNearNumber = par.first
-  println(curBoard)
+  val showBoard = curBoard.copy
+  hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
+  println(showBoard)
   println(hiddenNearNumber)
+  println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
   val minMines = curBoard.mines - hiddenAway.size
-  var counts = CellDict(Nil())
-  var hiddenAwayCount = 0
-  var boardAmount = 0
+  var counts = CellDict(Nil(), bigInt(0))
+  var hiddenAwayCount = bigInt(0)
+  var boardAmount = bigInt(0)
   // var mineAmt = 0
   try {
     var valid = true
@@ -41,11 +44,12 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     if (valid && curBoard.getMines.size >= minMines && curBoard.getMines.size <= board.mines) {
       // println("-----------")
       // println(curBoard)
-      boardAmount = boardAmount + 1
-      val posbMines = curBoard.getMines
-      hiddenAwayCount = hiddenAwayCount + board.mines - posbMines.size
-      posbMines.foreach{ xy =>
-        counts = counts.set(xy, counts.get(xy) + 1)
+      val mines = curBoard.getMines
+      val hiddenArrangements = binApprox(hiddenAway.size, board.mines - mines.size).floor
+      boardAmount = boardAmount + bigInt(hiddenArrangements)
+      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mines.size))
+      mines.foreach{ xy =>
+        counts = counts.set(xy, counts.get(xy) + bigInt(hiddenArrangements))
       }
     }
   } with QuantumMine { (xy, board) =>
@@ -64,9 +68,10 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
   println("Valid Boards: " ++ boardAmount.show)
-  // println(hiddenAwayCount.toDouble)
-  // println(boardAmount.toDouble)
-  // println(hiddenAway.size.toDouble)
+  println(awayProb)
+  println(hiddenAwayCount.toDouble)
+  println(boardAmount.toDouble)
+  println(hiddenAway.size.toDouble)
   probs
 }
 
