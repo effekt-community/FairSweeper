@@ -1,0 +1,57 @@
+import bench
+
+import src/utils
+import src/board
+import src/boards
+import src/solver
+import src/probabilitySolver
+
+// Beginner: 753/1000
+// Intermediate: 578/1000, ca. 4 min: 598/1000, 267006.66ms 604/1000
+// Expert: 27/100
+def main() = {
+  val games = 1000
+  // val cols = 30
+  // val rows = 16
+  // val mines = 99
+  var board = initializeBoard(0, 0, 0)
+
+  var wins = 0
+  val total = timed{each(0, games) { _ =>
+    // val init = timed{board = initializeBoard(rows,cols,mines)}
+    val init = timed{board = intermediateBoard()}
+    println("Initialized")
+    val solving = timed{
+      try {while (true) {
+        val probs = board.getProbabilities
+        val moves = probs.getMovesAndMines.first
+        if (moves.size > 0) moves.foreach{ xy => board.revealCell(xy)}
+        else {
+          var move = (XY(-1,-1),2.0)
+          probs.foreach {case (xy,prob) =>
+            if (prob < move.second) move = (xy,prob)
+          }
+          if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
+          board.revealCell(move.first)
+          // println(board)
+          println("Guessed: " ++ move.first.show)
+        }
+      }}
+      with GameOver {(board,move) =>
+        println("------- Lost ------")
+        println(move.show)
+        println(board)
+      }
+      with Won {board =>
+        println("------- Won -------")
+        println(board)
+        wins = wins + 1
+      }
+      with Revealing {_ => resume(())}
+    }
+    println("Initilization: " ++ init.formatMs)
+    println("Solving: " ++ solving.formatMs)
+  }}
+  println("Total time taken: " ++ total.formatMs)
+  println(wins.show ++ "/" ++ games.show)
+}

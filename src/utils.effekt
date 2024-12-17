@@ -1,0 +1,105 @@
+// -------------------------- Other ----------------------------
+effect Return[A](v: A): Unit
+
+// -------------------------- Cell ------------------------------
+type Cell {
+  Hidden(hasMine: Bool, isFlagged: Bool)
+  Revealed(adjacentMines: Int)
+  // Helper for solver
+  TrueHidden()
+  Mine()
+  NoMine()
+}
+
+def infixEq(left: Cell, right: Cell): Bool =
+  (left, right) match {
+    case (Hidden(l1,l2),Hidden(r1,r2)) => l1==r1 && l2==r2
+    case (Revealed(l),Revealed(r)) => l==r
+    case (TrueHidden(),TrueHidden()) => true
+    case (Mine(),Mine()) => true
+    case (NoMine(),NoMine()) => true
+    case _ => false
+  }
+
+// --------------------------- XY --------------------------------
+record XY(x: Int, y: Int)
+
+def infixEq(left: XY, right: XY): Bool =
+  if (left is XY(x1, y1) and right is XY(x2, y2)) {
+    x1 == x2 && y1 == y2
+  } else false
+
+def infixEq(left: List[XY], right: List[XY]): Bool = {
+  with on[OutOfBounds].default{false}
+  var v = left.size == right.size
+  left.foreachIndex{ (idx,xy){ctrl} =>
+    if (not(v)) ctrl.break()
+    v = (xy == right.get(idx))
+  }
+  v
+}
+
+def removeDuplicates(list: List[XY]) =
+  list.foldRight(Nil()){(nw,acc) =>
+    if (acc.any{old => equals(nw, old)}) acc
+    else acc.append(Cons(nw,Nil()))
+  }
+
+def show(xy: XY): String = "(" ++ xy.x.show ++ "," ++ xy.y.show ++ ")"
+
+def println(xys: List[XY]): Unit = {
+  println(xys.foldRight(""){(xy,acc) => xy.show ++ ", " ++ acc})
+}
+
+def isSubset(subset: List[XY], set: List[XY]): Bool = {
+  subset.all{ xy =>
+    set.any{xy2 => xy == xy2}
+  }
+}
+
+def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
+  l1.collect{xy1 =>
+    if (l2.any{xy2 => xy2 == xy1}) Some(xy1)
+    else None()
+  }
+}
+
+def getDifference(list: List[XY], without: List[XY]): List[XY] = {
+  val intersection = list.getIntersection(without)
+  list.collect{xyl =>
+    if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
+    else None()
+  }
+}
+
+def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
+  var moves: List[XY] = empty()
+  var mines: List[XY] = empty()
+  list.foreach{ case(xy,prob) =>
+    if (prob >= 0.99) mines = mines.append([xy])
+    else if (prob <= 0.01) moves = moves.append([xy])
+  }
+  (moves,mines)
+}
+
+// ----------------------- CellDict ---------------------------
+record CellDict(items: List[(XY,Int)])
+
+def get(dict: CellDict, key: XY): Int = {
+  try {
+    dict.items.foreach{ case (k,v) =>
+      if (k == key) do Return(v)
+    }
+    0
+  } with Return[Int] {v => v}
+}
+
+def set(dict: CellDict, key: XY, newV: Int): CellDict = {
+  var found = false
+  var items = dict.items.map{case (k,v) =>
+    if (k == key) {found = true; (k,newV)}
+    else (k,v)
+  }
+  if (not(found)) items = items.append([(key,newV)])
+  CellDict(items)
+}

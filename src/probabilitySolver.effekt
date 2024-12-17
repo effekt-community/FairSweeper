@@ -1,0 +1,84 @@
+module src/probabilitySolver
+
+import src/board
+import src/utils
+import src/main
+import src/solver
+
+effect QuantumMine(xy: XY, board: Board): Board
+
+def getProbabilities(board: Board): List[(XY,Double)] = {
+  println("-- Calculating Probability --")
+  println(board)
+  var curBoard = board.copy
+  curBoard.hideHiddenInfo
+  curBoard.revealObviousMines
+  val numbers = curBoard.getRevealed
+  val hidden = curBoard.getXY{
+    case TrueHidden() => true
+    case _ => false
+  }
+  val par = hidden.partition{ xy =>
+    curBoard.getRevealedNeighbors(xy).size > 0
+  }
+  val hiddenNearNumber = par.first
+  println(curBoard)
+  println(hiddenNearNumber)
+  val hiddenAway = par.second
+  val minMines = curBoard.mines - hiddenAway.size
+  var counts = CellDict(Nil())
+  var hiddenAwayCount = 0
+  var boardAmount = 0
+  // var mineAmt = 0
+  try {
+    var valid = true
+    hiddenNearNumber.foreach{ (xy){ctrl} =>
+      curBoard = do QuantumMine(xy, curBoard)
+      valid = curBoard.isValid(xy) //&& board.mines >= mineAmt
+      if (not(valid)) ctrl.break
+    }
+    // remove third check when ongoing bomb check works
+    if (valid && curBoard.getMines.size >= minMines && curBoard.getMines.size <= board.mines) {
+      // println("-----------")
+      // println(curBoard)
+      boardAmount = boardAmount + 1
+      val posbMines = curBoard.getMines
+      hiddenAwayCount = hiddenAwayCount + board.mines - posbMines.size
+      posbMines.foreach{ xy =>
+        counts = counts.set(xy, counts.get(xy) + 1)
+      }
+    }
+  } with QuantumMine { (xy, board) =>
+    board.setCell(xy, NoMine())
+    resume(board.copy)
+    board.setCell(xy, Mine())
+    // mineAmt = mineAmt + 1
+    resume(board)
+    // mineAmt = mineAmt - 1
+  }
+  // maybe calculate n over k for hiddenAway and give each mine that value
+  var probs = hiddenNearNumber.map{ xy =>
+    val amt = counts.get(xy)
+    (xy,(amt.toDouble/boardAmount.toDouble))
+  }
+  val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
+  hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  println("Valid Boards: " ++ boardAmount.show)
+  // println(hiddenAwayCount.toDouble)
+  // println(boardAmount.toDouble)
+  // println(hiddenAway.size.toDouble)
+  probs
+}
+
+def revealObviousMines(board: Board): Unit = {
+  val numbers = board.getRevealed
+  numbers.foreach{ xy =>
+    board.getCell(xy) match {
+      case Revealed(c) =>
+        val hdnbs = board.getHiddenNeighbors(xy)
+        val mines = board.getMineNeighbors(xy)
+        if (hdnbs.size + mines.size == c) hdnbs.foreach{xy2 => board.setCell(xy2, Mine())}
+      case _ => ()
+    }
+  }
+}

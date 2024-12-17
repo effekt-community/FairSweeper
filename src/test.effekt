@@ -1,33 +1,29 @@
 module src/test
 
 import test
-import src/game
-import src/solver
+import src/utils
+import src/board
 import src/boards
+import src/solver
+import src/probabilitySolver
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
   val board = simpleBoard1()
   val xy = XY(2,3)
-  val updatedBoard = flagCell(board, xy)
-  do assert(equals(updatedBoard.getCell(xy), Hidden(false,true)), "Flagging failed")
-  val toggledBoard = flagCell(updatedBoard, xy)
-  do assert(equals(toggledBoard.getCell(xy), Hidden(false,false)), "Removing flag failed")
+  board.flagCellEffectless(xy)
+  do assert(equals(board.getCell(xy), Hidden(false,true)), "Flagging failed")
+  board.flagCellEffectless(xy)
+  do assert(equals(board.getCell(xy), Hidden(false,false)), "Removing flag failed")
 }
 
 def testRevealCell() = {
   val board = simpleBoard1()
-  try {
-    revealCell(board, XY(0, 0))
-    do assert(board.getCell(XY(0, 0)) match {
-      case Revealed(_) => true
-      case _           => false
-    }, "Reveal failed")
-    revealCell(board, XY(2, 2))
-    do assert(false, "Reveal failed to trigger GameOver for mine")
-  } with GameOver {
-    println("GameOver correctly triggered")
-  }
+  board.revealCellEffectless(XY(0, 0))
+  do assert(board.getCell(XY(0, 0)) match {
+    case Revealed(_) => true
+    case _           => false
+  }, "Reveal failed")
 }
 
 def testCountAdjacentMines() = {
@@ -50,21 +46,23 @@ def testCollectWithXY() = {
   do assert(res, "collectWithXY failed to collect the correct cells")
 }
 
-// ---------------------- SOLVER -----------------------------
+// ---------------------- PATTERN SOLVER FUNCTIONS -----------------------------
 def testSolve() = {
   val board = simpleBoard2()
   var moves: List[XY] = empty()
   try {
-    moves = board.getMoves()
+    board.getMoves() match {
+      case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
+    }
     ()
   }
   with QuickMoves {_ => resume(())}
-  do assert(moves.size == 0, "Solver should return no moves")
 }
 
 def testHiddenNeighbors() = {
   val board = simpleBoard2()
-  val neighbors = hiddenNeighbors(board, XY(1, 1))
+  board.hideHiddenInfo()
+  val neighbors = getHiddenNeighbors(board, XY(1, 1))
   do assert(neighbors.size == 8, "Should find 8 unrevealed neighbors for (1, 1)")
   do assert(neighbors.any{xy => xy == XY(0, 0)}, "Should include top-left neighbor")
   do assert(neighbors.any{xy => xy == XY(2, 2)}, "Should include bottom-right neighbor")
@@ -72,43 +70,63 @@ def testHiddenNeighbors() = {
 
 def testRemoveMine() = {
   var board = simpleBoard2()
+  board.hideHiddenInfo
   board.removeMine(XY(0, 0))
-  do assert(board.getCell(XY(0, 0)) == Revealed(0), "Bomb revealed")
-  do assert(board.getCell(XY(0, 1)) == Hidden(false, false), "Hidden cells stay hidden")
+  do assert(board.getCell(XY(0, 0)) == Mine(), "Bomb revealed")
+  do assert(board.getCell(XY(0, 1)) == TrueHidden(), "Hidden cells stay hidden")
   do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
 }
 
 def testIntersection() = {
-  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
-  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
   val intersection = l1.getIntersection(l2)
   do assert(intersection.any{xy => xy == XY(0,1)}, "Intersection should be XY(0,1)")
 }
 
 def testDifference() = {
-  val l1: List[XY] = Cons(XY(0,0),Cons(XY(1,0),Cons(XY(0,1),Nil())))
-  val l2: List[XY] = Cons(XY(0,1),Nil())
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
   val intersection = l1.getDifference(l2)
   do assert(intersection.any{xy => xy == XY(0,0)}, "Difference should contain XY(0,0)")
   do assert(intersection.any{xy => xy == XY(1,0)}, "Difference should contain XY(1,0)")
 }
 
-def testSolverSimple() = {
-  val board = simpleBoard1()
-  do assert(0 == 1, "todo")
+def testSubset() = {
+  val l1: List[XY] = [XY(0,0),XY(1,0),XY(0,1)]
+  val l2: List[XY] = [XY(0,1)]
+  do assert(l2.isSubset(l1), "l2 is a subset of l1")
 }
 
-def testSolverComplex(board: Board, amtMoves: Int, expMove: XY) = {
-  var moves: List[XY] = empty()
-  try {
-    moves = board.getMoves()
-    ()
+// ---------------------- SOLVER -----------------------------
+def testSolver(board: Board, amtMoves: Int, expMove: XY, expMine: XY){f: (Board) => (List[XY],List[XY])} =
+  f(board) match {
+    case (moves,mines) =>
+      if (not(expMove == XY(-1,-1))) do assert(moves.any{xy => xy == expMove}, "A move should be at (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
+      if (not(expMine == XY(-1,-1))) do assert(mines.any{xy => xy == expMine}, "A mine should be at (" ++ expMine.x.show ++ "," ++ expMine.y.show ++ ")")
+      do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move(s), but got " ++ moves.size.show)
   }
-  with QuickMoves {_ => resume(())}
-  do assert(moves.size == amtMoves, "Expected: " ++ amtMoves.show ++ " possible move, but got " ++ moves.size.show)
-  do assert(moves.any{xy => xy == expMove}, "The move should be (" ++ expMove.x.show ++ "," ++ expMove.y.show ++ ")")
+def testSolver(board: Board, amtMoves: Int, expMine: XY){f: (Board) => (List[XY],List[XY])} =
+  testSolver(board, amtMoves, XY(-1,-1), expMine){f}
+def testSolver(board: Board, amtMoves: Int){f: (Board) => (List[XY],List[XY])} =
+  testSolver(board, amtMoves, XY(-1,-1)){f}
+
+def solverTests(){f: (Board) => (List[XY],List[XY])} = {
+  test("NoSureMove"){testSolver(simpleBoard2(), 0){f}}
+  test("SolveSurrounded"){testSolver(surroundedBoard(), 1, XY(0,0), XY(0,1)){f}}
+  test("SolveSubsetBoard1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2)){f}}
+  test("SolveSubsetBoard2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2)){f}}
+  test("SolveSubsetBoard3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1)){f}}
+  test("SolveSubsetBoard5"){testSolver(subsetBoard4(), 0){f}}
+  test("SolveDifferenceBoard1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2)){f}}
+  test("SolveDifferenceBoard2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0)){f}}
+  test("SolveDifferenceBoard3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0)){f}}
+  test("SolveDifferenceBoard4"){testSolver(differenceBoard4(), 0, XY(0,2)){f}}
+  test("SolveCountBoard1"){testSolver(countBoard1(), 2, XY(2,1), XY(0,0)){f}}
+  test("SolveCountBoard2"){testSolver(countBoard2(), 5, XY(3,0), XY(-1,-1)){f}}
 }
 
+// -------------------------------- TESTS ---------------------------------------
 def runTests() = {
   println("Running tests...")
   suite("Fairsweeper Game") {
@@ -117,14 +135,21 @@ def runTests() = {
     test("AdjacentMines"){testCountAdjacentMines()}
     test("CollectCells"){testCollectWithXY()}
     }
-  suite("Solver") {
+  suite("PatternSolverFunctions") {
     test("UnrevealedNeighbors"){testHiddenNeighbors()}
     test("RemoveMine"){testRemoveMine()}
     test("CalcIntersection"){testIntersection()}
     test("CalcDifference"){testDifference()}
-    test("NoSureMove"){testSolve()}
-    test("SolveComplexMap1"){testSolverComplex(complexBoard1(), 1, XY(1,2))}
-    test("SolveComplexMap2"){testSolverComplex(complexBoard2(), 5, XY(5,0))}
+    test("IsSubset"){testSubset()}
+  }
+  suite("PatternSolver") {
+    solverTests{board =>
+      try {board.getMoves}
+      with QuickMoves {_ => resume(())}
+    }
+  }
+  suite("ProbSolver") {
+    solverTests{board => board.getProbabilities.getMovesAndMines}
   }
   println("All tests passed!")
 }

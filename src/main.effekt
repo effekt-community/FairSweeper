@@ -1,39 +1,39 @@
 module main // must be named same as the file!
 
 import io/console
-import src/game
+import tty
+
+import src/board
+import src/utils
 
 def main() = {
-  var board = initializeBoard(10, 10, 10)
-  println(clear())
+  var board = initializeBoard(4, 4, 3)
+  println(Screen::clear())
 
-  try {
-    playGame(board)
-  } with Reveal { case (row,col) =>
-    println("Revealing cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    try {
-      revealCell(board, XY(row, col))
-      resume(())}
-    with GameOver {println("Game Over! You hit a mine.")}
+  try {playGame(board)}
+  with GameOver {(_,_) => println("Game Over! You hit a mine.")}
+  with Won {_ => println("You WON!"); println(board)}
+  with Revealing { xy =>
+    println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
+    resume(())
   }
-  with Flag { case (row, col) =>
-    println("Flagging cell at (" ++ show(row) ++ ", " ++ show(col) ++ ")")
-    flagCell(board, XY(row, col))
+  with Flagging { xy =>
+    println("Flagging cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
   }
   println("over")
 }
 
-def playGame(board: Board): Unit / {Flag, Reveal} = {
-  with on[WrongFormat].panic
-  var board = board
+def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
   while (true) {
-    printBoard(board, false)
+    println(board)
     val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
-    println(clear())
+    println(Screen::clear())
+    with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
     input.split(" ") match {
-      case Cons("r", Cons(x, Cons(y, _)))  => do Reveal((y.toInt, x.toInt))
-      case Cons("f", Cons(x, Cons(y, _))) => do Flag((y.toInt, x.toInt))
+      // todo xy must be largereq 0 and lesseq board.rows/cols
+      case Cons("r", Cons(x, Cons(y, _))) => board.revealCell(XY(x.toInt, y.toInt), true)
+      case Cons("f", Cons(x, Cons(y, _))) => board.flagCell(XY(x.toInt, y.toInt))
       case _ => println("Invalid input. Try again.")
     }
   }
@@ -43,38 +43,4 @@ def askUser(prompt: String): String = {
   with console
   println(prompt)
   do readLine()
-}
-
-def printBoard(board: Board, showBombs: Bool): Unit = {
-  var str = ""
-  var counter = 0
-  str = str ++ "\n"
-  str = str ++ "*|"
-  each(0, board.cols) {n => str = str ++ show(n) ++ "|"}
-  foreach(board.grid) {row =>
-    str = str ++ "\n"
-    str = str ++ show(counter) ++ "|"
-    counter = counter + 1
-    foreach(row) {elem =>
-      str = str ++ (elem match {
-        case Hidden(true, _) and showBombs      => "B"
-        case Hidden(_, true)                    => "F"
-        case Hidden(_, false)                   => "◼"
-        case Revealed(count) and (count > 0) => show(count)
-        case Revealed(_)                     => " "
-      }) ++ "|"
-    }
-  }
-  println(str)
-}
-
-namespace Escape {
-  val CSI = "\u001b["
-  def escape(s: String): String = CSI ++ s
-  def cursorPosition(x: Int, y: Int): String = escape(y.show ++ ";" ++ x.show ++ "H")
-  def eraseDisplay(x: Int): String = escape(x.show ++ "J")
-}
-
-def clear(): String = {
-  Escape::eraseDisplay(2) ++ Escape::cursorPosition(1, 1)
 }
