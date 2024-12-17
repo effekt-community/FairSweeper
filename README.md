@@ -20,6 +20,12 @@
 
 ## Progress
 
+### Week 4
+- See https://github.com/TheDying0fLight/FairSweeper/pull/34
+
+### Week 3
+- See https://github.com/TheDying0fLight/FairSweeper/pull/23
+
 ### Week 2
 - See https://github.com/TheDying0fLight/FairSweeper/pull/22
 
