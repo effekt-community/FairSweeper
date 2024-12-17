@@ -5,6 +5,8 @@
 - [FairSweeper](#fairsweeper)
   - [Table of contents](#table-of-contents)
   - [Progress](#progress)
+    - [Week 4](#week-4)
+    - [Week 3](#week-3)
     - [Week 2](#week-2)
     - [Week 1](#week-1)
   - [Useful commands](#useful-commands)
@@ -19,6 +21,12 @@
 ---
 
 ## Progress
+
+### Week 4
+- See https://github.com/TheDying0fLight/FairSweeper/pull/23
+
+### Week 3
+- See https://github.com/TheDying0fLight/FairSweeper/pull/23
 
 ### Week 2
 - See https://github.com/TheDying0fLight/FairSweeper/pull/22
