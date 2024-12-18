@@ -11,8 +11,8 @@ def main() = {
   println(Screen::clear())
 
   try {playGame(board)}
-  with GameOver {(_,_) => println("Game Over! You hit a mine.")}
-  with Won {_ => println("You WON!"); println(board)}
+  with GameOver {(_,_) => println("Game Over! You hit a mine."); println(board, true)}
+  with Won {_ => println("You WON!"); println(board, true)}
   with Revealing { xy =>
     println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
@@ -32,7 +32,7 @@ def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
     with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
     input.split(" ") match {
       // todo xy must be largereq 0 and lesseq board.rows/cols
-      case Cons("r", Cons(x, Cons(y, _))) => board.revealCell(XY(x.toInt, y.toInt), true)
+      case Cons("r", Cons(x, Cons(y, _))) => board.revealCell(XY(x.toInt, y.toInt), true, true)
       case Cons("f", Cons(x, Cons(y, _))) => board.flagCell(XY(x.toInt, y.toInt))
       case _ => println("Invalid input. Try again.")
     }

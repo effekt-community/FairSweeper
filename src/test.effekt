@@ -47,17 +47,10 @@ def testCollectWithXY() = {
 }
 
 // ---------------------- PATTERN SOLVER FUNCTIONS -----------------------------
-def testSolve() = {
-  val board = simpleBoard2()
-  var moves: List[XY] = empty()
-  try {
-    board.getMoves() match {
-      case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
-    }
-    ()
+def testSolve() =
+  simpleBoard2().getMovesAndMines match {
+    case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
   }
-  with QuickMoves {_ => resume(())}
-}
 
 def testHiddenNeighbors() = {
   val board = simpleBoard2()
@@ -143,10 +136,7 @@ def runTests() = {
     test("IsSubset"){testSubset()}
   }
   suite("PatternSolver") {
-    solverTests{board =>
-      try {board.getMoves}
-      with QuickMoves {_ => resume(())}
-    }
+    solverTests{board => board.getMovesAndMines}
   }
   suite("ProbSolver") {
     solverTests{board => board.getProbabilities.getMovesAndMines}

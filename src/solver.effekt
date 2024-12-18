@@ -2,11 +2,8 @@ import src/board
 import src/utils
 import src/main
 
-effect QuickMoves(moves: List[XY]): Unit
-
-def getMoves(board: Board): (List[XY],List[XY]) / {QuickMoves} = board.getMoves(Nil(),Nil())
-
-def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) / {QuickMoves} = {
+def getMovesAndMines(board: Board): (List[XY],List[XY]) = board.getMovesAndMines(Nil(),Nil())
+def getMovesAndMines(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY],List[XY]) = {
   val board = board.copy
   // hide hiden info so solver doesnt have them
   board.hideHiddenInfo
@@ -26,7 +23,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
     madeProgress = true
     board.removeMines(mines)
   }
-  def updateNumbers() = {
+  def updateNumbers() =
     numbers = numbers.collect{ xy =>
       val count = if (board.getCell(xy) is Revealed(c)) c else <>
       count match {
@@ -38,7 +35,6 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
         case v => if (v > 0) Some(xy) else None()
       }
     }
-  }
 
   while (madeProgress and amtMines > 0) {
     madeProgress = false
@@ -50,7 +46,6 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
     }
     updateNumbers()
 
-    do QuickMoves(moves)
     // solve via bomb difference
     numbers.foreach{ xy =>
       val mines = board.findMinesByDifference(xy)
@@ -85,7 +80,7 @@ def getMoves(board: Board, foundMoves: List[XY], foundMines: List[XY]): (List[XY
   (moves,foundMines)
 }
 
-def findMinesByDifference(board: Board, xy: XY): List[XY] = {
+def findMinesByDifference(board: Board, xy: XY): List[XY] =
   board.checkByHiddenNeighbors(xy, false) { (a,b) =>
     (a,b) match {
       case ((hdnbs, count), (hdnbs2, count2)) and count2 > count =>
@@ -94,9 +89,8 @@ def findMinesByDifference(board: Board, xy: XY): List[XY] = {
       case _ => Nil()
     }
   }
-}
 
-def findMovesBySubset(board: Board, xy: XY): List[XY] = {
+def findMovesBySubset(board: Board, xy: XY): List[XY] =
   board.checkByHiddenNeighbors(xy, true) { (a,b) =>
     (a,b) match {
       case ((hdnbs1, c1), (hdnbs2, c2)) =>
@@ -106,7 +100,6 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] = {
         else Nil()
     }
   }
-}
 
 def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
                                         {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
@@ -152,10 +145,8 @@ def removeMine(board: Board, mine: XY): Unit = {
   }
 }
 
-def removeMines(board: Board, mines: List[XY]): Unit = {
+def removeMines(board: Board, mines: List[XY]): Unit =
   mines.foreach{ xy => board.removeMine(xy) }
-}
 
-def removeMoves(board: Board, moves: List[XY]): Unit = {
+def removeMoves(board: Board, moves: List[XY]): Unit =
   moves.foreach{ xy => board.setCell(xy, NoMine()) }
-}

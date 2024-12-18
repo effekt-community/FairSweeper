@@ -2,6 +2,10 @@
 effect Return[A](v: A): Unit
 extern type BigInt
 
+// ------------------------ Other ------------------------------
+// inclusive lower exclusive upper
+def randInt(lower: Int, upper: Int): Int = lower + (random() * upper.toDouble).floor
+
 // --------------------------- XY --------------------------------
 record XY(x: Int, y: Int)
 

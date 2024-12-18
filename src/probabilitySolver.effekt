@@ -25,13 +25,13 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val showBoard = curBoard.copy
   hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
   println(showBoard)
-  println(hiddenNearNumber)
   println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
   val minMines = curBoard.mines - hiddenAway.size
   var counts = CellDict(Nil(), bigInt(0))
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
+  var foundBoards = 0
   // var mineAmt = 0
   try {
     var valid = true
@@ -44,6 +44,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     if (valid && curBoard.getMines.size >= minMines && curBoard.getMines.size <= board.mines) {
       // println("-----------")
       // println(curBoard)
+      foundBoards = foundBoards + 1
       val mines = curBoard.getMines
       val hiddenArrangements = binApprox(hiddenAway.size, board.mines - mines.size).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
@@ -67,11 +68,11 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
-  println("Valid Boards: " ++ boardAmount.show)
-  println(awayProb)
-  println(hiddenAwayCount.toDouble)
-  println(boardAmount.toDouble)
-  println(hiddenAway.size.toDouble)
+  println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
+  // println(awayProb)
+  // println(hiddenAwayCount.toDouble)
+  // println(boardAmount.toDouble)
+  // println(hiddenAway.size.toDouble)
   probs
 }
 
