@@ -10,17 +10,19 @@ import src/probabilitySolver
 Beginner:
     21542.50ms 775/1000
   Safe First Move:
-    23163.88ms 904/1000
+    23163.88ms 904/1000,
+    22056.75ms 909/1000,
+    20177.9ms 895/1000,
 Intermediate:
   Probs:
     267006.66ms 604/1000, 230606.24ms 645/1000,
     188870.7ms 642/1000, 200331.59ms 634/1000,
     214041.63ms 646/1000,
-  Combined:
-    108712.33ms 465/1000,
   Safe First Move:
     317517.43ms 748/1000,
     533331.9ms 777/1000,
+    394376.76ms 769/1000,
+    305567.46ms 747/1000,
 Expert:
   Combined:
     5585075.86ms 59/1000
@@ -36,6 +38,7 @@ def main() = {
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
+    // val init = timed{board = expertBoard()}
     val init = timed{board = intermediateBoard()}
     val solving = timed{
       try {while (true) {

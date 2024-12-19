@@ -1,0 +1,19 @@
+effect Twice(): Unit
+record Count(x: Int)
+
+def main() = {
+  with on[OutOfBounds].panic
+  var x = array(10, 2)
+  try {
+    var x = x
+    each(0, 4) {v =>
+      do Twice()
+      x = x.copy
+      x.set(0, x.get(0) + 1)
+    }
+    println(x)
+  } with Twice {
+    resume(())
+    resume(())
+  }
+}

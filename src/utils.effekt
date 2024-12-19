@@ -73,17 +73,18 @@ type Cell {
   Hidden(hasMine: Bool, isFlagged: Bool)
   Revealed(adjacentMines: Int)
   // Used for solver
-  TrueHidden()
+  SHidden()
   Mine()
   NoMine()
   Relevant()
+  SRevealed(adjacentMines: Int, hiddenNeighbors: Int)
 }
 
 def infixEq(left: Cell, right: Cell): Bool =
   (left, right) match {
     case (Hidden(l1,l2),Hidden(r1,r2)) => l1==r1 && l2==r2
     case (Revealed(l),Revealed(r)) => l==r
-    case (TrueHidden(),TrueHidden()) => true
+    case (SHidden(),SHidden()) => true
     case (Mine(),Mine()) => true
     case (NoMine(),NoMine()) => true
     case _ => false

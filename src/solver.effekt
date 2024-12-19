@@ -67,7 +67,7 @@ def getMovesAndMines(board: Board, foundMoves: List[XY], foundMines: List[XY]): 
   if (amtMines == 0) {
     board.foreach{ (xy,cell) =>
       cell match {
-        case TrueHidden() => moves = moves.append([xy])
+        case SHidden() => moves = moves.append([xy])
         case _ => ()
       }
     }
@@ -135,18 +135,8 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
   acc.removeDuplicates
 }
 
-def removeMine(board: Board, mine: XY): Unit = {
-  board.setCell(mine, Mine())
-  board.getNeighbors(mine, 1).foreach{ xy =>
-    board.getCell(xy) match {
-      case Revealed(count) => board.setCell(xy, Revealed(count - 1))
-      case _ => ()
-    }
-  }
-}
-
 def removeMines(board: Board, mines: List[XY]): Unit =
-  mines.foreach{ xy => board.removeMine(xy) }
+  mines.foreach{ xy => board.removeMine(xy);() }
 
 def removeMoves(board: Board, moves: List[XY]): Unit =
   moves.foreach{ xy => board.setCell(xy, NoMine()) }
