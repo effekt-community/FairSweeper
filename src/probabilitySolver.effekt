@@ -12,7 +12,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   // println(board)
   var curBoard = board.copy
   curBoard.hideHiddenInfo
-  curBoard.revealObviousMines
+  val obvsMines = curBoard.revealObviousMines
   val numbers = curBoard.getRevealed
   val hidden = curBoard.getXY{
     case TrueHidden() => true
@@ -68,6 +68,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
   println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
   // println(awayProb)
   // println(hiddenAwayCount.toDouble)
@@ -76,15 +77,15 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   probs
 }
 
-def revealObviousMines(board: Board): Unit = {
-  val numbers = board.getRevealed
-  numbers.foreach{ xy =>
+def revealObviousMines(board: Board): List[XY] =
+  board.getRevealed.collect{ xy =>
     board.getCell(xy) match {
       case Revealed(c) =>
         val hdnbs = board.getHiddenNeighbors(xy)
         val mines = board.getMineNeighbors(xy)
-        if (hdnbs.size + mines.size == c) hdnbs.foreach{xy2 => board.setCell(xy2, Mine())}
-      case _ => ()
+        if (hdnbs.size + mines.size == c)
+          Some(hdnbs.collect{xy2 => board.setCell(xy2, Mine()); Some(xy2)})
+        else None()
+      case _ => None()
     }
-  }
-}
+  }.flatMap{e => e}
