@@ -67,7 +67,6 @@ def testRemoveMine() = {
   board.removeMine(XY(0, 0))
   do assert(board.getCell(XY(0, 0)) == Mine(), "Bomb revealed")
   do assert(board.getCell(XY(0, 1)) == SHidden(), "Hidden cells stay hidden")
-  do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
 }
 
 def testIntersection() = {

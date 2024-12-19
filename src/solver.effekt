@@ -14,7 +14,7 @@ def getMovesAndMines(board: Board, foundMoves: List[XY], foundMines: List[XY]): 
   var moves = foundMoves
   board.removeMoves(foundMoves)
   var numbers = board.getXY{
-    case Revealed(count) and count > 0 => true
+    case SRevealed(count,_) and count > 0 => true
     case _ => false
   }
   def remMines(mines: List[XY]) = {
@@ -25,7 +25,7 @@ def getMovesAndMines(board: Board, foundMoves: List[XY], foundMines: List[XY]): 
   }
   def updateNumbers() =
     numbers = numbers.collect{ xy =>
-      val count = if (board.getCell(xy) is Revealed(c)) c else <>
+      val count = if (board.getCell(xy) is SRevealed(c,_)) c else <>
       count match {
         case 0 =>
           val getHiddenNeighbors = board.getHiddenNeighbors(xy)
@@ -41,7 +41,7 @@ def getMovesAndMines(board: Board, foundMoves: List[XY], foundMines: List[XY]): 
     // solve via hidden == count
     numbers.foreach{ xy =>
       val getHiddenNeighbors = board.getHiddenNeighbors(xy)
-      val count = if (board.getCell(xy) is Revealed(c)) c else <>
+      val count = if (board.getCell(xy) is SRevealed(c,_)) c else <>
       if (getHiddenNeighbors.size == count) remMines(getHiddenNeighbors)
     }
     updateNumbers()
@@ -104,10 +104,10 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] =
 def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
                                         {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
   with on[OutOfBounds].panic
-  val count = if (board.getCell(xy) is Revealed(c)) c else <>
+  val count = if (board.getCell(xy) is SRevealed(c,_)) c else <>
   val nbs = board.getNeighbors(xy, 2).collect{ xy =>
     board.getCell(xy) match {
-      case Revealed(_) => Some(xy)
+      case SRevealed(_,_) => Some(xy)
       case _ => None()
     }
   }
@@ -119,7 +119,7 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
     each(idx, nbs.size) { (idx2){ctrl} =>
       val curXY = nbs.get(idx2)
       board.getCell(curXY) match {
-        case Revealed(c) and c > 0 =>
+        case SRevealed(c,_) and c > 0 =>
           if (count < count2) ctrl.break
           var hdn = board.getHiddenNeighbors(curXY)
           if (hdn.size == 0) ctrl.continue()

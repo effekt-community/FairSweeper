@@ -21,7 +21,10 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val par = hidden.partition{ xy =>
     curBoard.getRevealedNeighbors(xy).size > 0
   }
-  val hiddenNearNumber = par.first
+  // sort by amount of revealed neighbors / information
+  val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
+    curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
+  }
   val showBoard = curBoard.copy
   hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
   println(showBoard)
@@ -88,8 +91,7 @@ def revealObviousMines(board: Board): List[XY] =
     board.getCell(xy) match {
       case SRevealed(c,_) =>
         val hdnbs = board.getHiddenNeighbors(xy)
-        val mines = board.getMineNeighbors(xy)
-        if (hdnbs.size + mines.size == c)
+        if (hdnbs.size == c)
           Some(hdnbs.collect{xy2 => board.removeMine(xy2); Some(xy2)})
         else None()
       case _ => None()
