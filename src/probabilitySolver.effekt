@@ -8,8 +8,7 @@ import src/solver
 effect QuantumMine(): Bool
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
-  println("-- Calculating Probability --")
-  // println(board)
+  with on[OutOfBounds].panic
   var curBoard = board.copy
   curBoard.hideHiddenInfo
   val obvsMines = curBoard.revealObviousMines
@@ -27,15 +26,16 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   }
   val showBoard = curBoard.copy
   hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
+  // println(board)
   println(showBoard)
   println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
+  val hiddenAwaySize = hiddenAway.size
   val minMines = curBoard.mines - hiddenAway.size
   var counts = CellDict(Nil(), bigInt(0))
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
-  // var mineAmt = 0
   try {
     var curBoard = curBoard
     var mines: List[XY] = obvsMines
@@ -59,7 +59,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       // println("-----------")
       // println(curBoard)
       foundBoards = foundBoards + 1
-      val hiddenArrangements = binApprox(hiddenAway.size, board.mines - mineAmt).floor
+      val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
       hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mineAmt))
       mines.foreach{ xy =>
@@ -74,14 +74,14 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     val amt = counts.get(xy)
     (xy,(amt.toDouble/boardAmount.toDouble))
   }
-  val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAway.size.toDouble
+  val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
   println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
-  // println(awayProb)
-  // println(hiddenAwayCount.toDouble)
-  // println(boardAmount.toDouble)
-  // println(hiddenAway.size.toDouble)
+  println(awayProb)
+  println(hiddenAwayCount.toDouble)
+  println(boardAmount.toDouble)
+  println(hiddenAwaySize.toDouble)
   probs
 }
 
