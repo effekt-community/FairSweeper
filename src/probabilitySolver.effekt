@@ -31,15 +31,16 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
   val hiddenAwaySize = hiddenAway.size
-  val minMines = curBoard.mines - hiddenAway.size
+  val minMines = curBoard.mines - hiddenAwaySize
   var counts = CellDict(Nil(), bigInt(0))
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
   try {
     var curBoard = curBoard
-    var mines: List[XY] = obvsMines
+    var mines: List[XY] = empty()
     var valid = true
+    var mineAmt = obvsMines.size
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       if (do QuantumMine()) {
         curBoard = curBoard.copy
@@ -51,11 +52,11 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
         valid = curBoard.removeMove(xy)
       }
       // count mines instead of always calc size when leak is fixed
-      valid = valid && mines.size <= curBoard.mines
+      // valid = valid && mineAmt + mines.size <= board.mines
       if (not(valid)) ctrl.break
     }
-    val mineAmt = mines.size
-    if (valid && mineAmt >= minMines) {
+    mineAmt = mineAmt + mines.size
+    if (valid && mineAmt >= minMines && mineAmt <= board.mines) {
       // println("-----------")
       // println(curBoard)
       foundBoards = foundBoards + 1
