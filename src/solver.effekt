@@ -102,7 +102,7 @@ def findMovesBySubset(board: Board, xy: XY): List[XY] =
   }
 
 def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
-                                        {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
+                          {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
   with on[OutOfBounds].panic
   val count = if (board.getCell(xy) is SRevealed(c,_)) c else <>
   val nbs = board.getNeighbors(xy, 2).collect{ xy =>
@@ -139,4 +139,4 @@ def removeMines(board: Board, mines: List[XY]): Unit =
   mines.foreach{ xy => board.removeMine(xy);() }
 
 def removeMoves(board: Board, moves: List[XY]): Unit =
-  moves.foreach{ xy => board.removeMove(xy);() }
+  moves.foreach{ xy => board.setCell(xy, SRevealed(0,0)) }

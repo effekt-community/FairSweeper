@@ -109,7 +109,7 @@ def solverTests(){f: (Board) => (List[XY],List[XY])} = {
   test("SolveSubsetBoard1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2)){f}}
   test("SolveSubsetBoard2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2)){f}}
   test("SolveSubsetBoard3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1)){f}}
-  test("SolveSubsetBoard5"){testSolver(subsetBoard4(), 0){f}}
+  test("SolveSubsetBoard4"){testSolver(subsetBoard4(), 0){f}}
   test("SolveDifferenceBoard1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2)){f}}
   test("SolveDifferenceBoard2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0)){f}}
   test("SolveDifferenceBoard3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0)){f}}

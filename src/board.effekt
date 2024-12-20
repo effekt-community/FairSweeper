@@ -217,14 +217,6 @@ def getHiddenNeighbors(board: Board, xy: XY): List[XY] =
     }
   }
 
-def getMineNeighbors(board: Board, xy: XY): List[XY] =
-  board.getNeighbors(xy).collect{ xy =>
-    board.getCell(xy) match {
-      case Mine() => Some(xy)
-      case _ => None()
-    }
-  }
-
 def getMines(board: Board): List[XY] =
   board.getXY{
     case Mine() => true
@@ -235,7 +227,6 @@ def getMines(board: Board): List[XY] =
 def getSafeHidden(board: Board): List[XY] =
   board.getXY{
     case Hidden(false,_) => true
-    case SHidden() => true
     case _ => false
   }
 
