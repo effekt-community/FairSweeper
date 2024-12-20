@@ -154,7 +154,6 @@ def println(board: Board, showBombs: Bool): Unit = {
         case Revealed(count) and (count > 0) => green(count.show)
         case Revealed(_)                     => " "
         // for solver visualization
-        case NoMine()                        => "N"
         case Mine()                          => red("M")
         case SHidden()                       => cyan("H")
         case Relevant()                      => magenta("R")
@@ -189,8 +188,7 @@ def removeMine(board: Board, mine: XY): Bool = {
   }
 }
 
-def removeMove(board: Board, move: XY): Bool = {
-  board.setCell(move, NoMine())
+def removeMove(board: Board, move: XY): Bool =
   board.getNeighbors(move).all{ xy =>
     board.getCell(xy) match {
       case SRevealed(count, hdnbs) =>
@@ -199,7 +197,6 @@ def removeMove(board: Board, move: XY): Bool = {
       case _ => true
     }
   }
-}
 
 // ------------------------- GETTER ------------------------
 def getRevealedNeighbors(board: Board, xy: XY): List[XY] =

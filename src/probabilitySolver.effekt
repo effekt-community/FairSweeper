@@ -38,39 +38,38 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   // var mineAmt = 0
   try {
     var curBoard = curBoard
+    var mines: List[XY] = obvsMines
     var valid = true
     hiddenNearNumber.foreach{ (xy){ctrl} =>
       if (do QuantumMine()) {
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy)
+        mines = mines.append([xy])
       }
       else {
         curBoard = curBoard.copy
         valid = curBoard.removeMove(xy)
       }
-      //&& board.mines >= mineAmt
+      // count mines instead of always calc size when leak is fixed
+      valid = valid && mines.size <= curBoard.mines
       if (not(valid)) ctrl.break
     }
-    // remove third check when ongoing bomb check works
-    if (valid && curBoard.getMines.size >= minMines && curBoard.getMines.size <= board.mines) {
+    val mineAmt = mines.size
+    if (valid && mineAmt >= minMines) {
       // println("-----------")
       // println(curBoard)
       foundBoards = foundBoards + 1
-      val mines = curBoard.getMines
-      val hiddenArrangements = binApprox(hiddenAway.size, board.mines - mines.size).floor
+      val hiddenArrangements = binApprox(hiddenAway.size, board.mines - mineAmt).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
-      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mines.size))
+      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mineAmt))
       mines.foreach{ xy =>
         counts = counts.set(xy, counts.get(xy) + bigInt(hiddenArrangements))
       }
     }
   } with QuantumMine {
     resume(false)
-    // mineAmt = mineAmt + 1
     resume(true)
-    // mineAmt = mineAmt - 1
   }
-  // maybe calculate n over k for hiddenAway and give each mine that value
   var probs = hiddenNearNumber.map{ xy =>
     val amt = counts.get(xy)
     (xy,(amt.toDouble/boardAmount.toDouble))
