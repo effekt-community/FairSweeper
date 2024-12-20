@@ -32,57 +32,58 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenAway = par.second
   val hiddenAwaySize = hiddenAway.size
   val minMines = curBoard.mines - hiddenAwaySize
-  var counts = CellDict(Nil(), bigInt(0))
+  val counts = array(hiddenNearNumber.size, bigInt(0))
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
   try {
     var curBoard = curBoard
-    var mines: List[XY] = empty()
+    var mines = array(hiddenNearNumber.size, false)
     var valid = true
     var mineAmt = obvsMines.size
-    hiddenNearNumber.foreach{ (xy){ctrl} =>
+    hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
       if (do QuantumMine()) {
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy)
-        mines = mines.append([xy])
+        mines = mines.copy
+        mines.set(idx, true)
+        mineAmt = mineAmt + 1
       }
       else {
         curBoard = curBoard.copy
         valid = curBoard.removeMove(xy)
       }
       // count mines instead of always calc size when leak is fixed
-      // valid = valid && mineAmt + mines.size <= board.mines
+      valid = valid && mineAmt <= board.mines
       if (not(valid)) ctrl.break
     }
-    mineAmt = mineAmt + mines.size
-    if (valid && mineAmt >= minMines && mineAmt <= board.mines) {
+    if (valid && mineAmt >= minMines) {
       // println("-----------")
       // println(curBoard)
       foundBoards = foundBoards + 1
       val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
       hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mineAmt))
-      mines.foreach{ xy =>
-        counts = counts.set(xy, counts.get(xy) + bigInt(hiddenArrangements))
+      mines.foreachIndex{ (idx,hasMine) =>
+        if (hasMine) counts.set(idx, counts.get(idx) + bigInt(hiddenArrangements))
       }
     }
   } with QuantumMine {
     resume(false)
     resume(true)
   }
-  var probs = hiddenNearNumber.map{ xy =>
-    val amt = counts.get(xy)
-    (xy,(amt.toDouble/boardAmount.toDouble))
+  var probs = empty()
+  hiddenNearNumber.foreachIndex{ (idx,xy) =>
+    probs = probs.append([(xy,(counts.get(idx).toDouble/boardAmount.toDouble))])
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
   println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
-  println(awayProb)
-  println(hiddenAwayCount.toDouble)
-  println(boardAmount.toDouble)
-  println(hiddenAwaySize.toDouble)
+  // println(awayProb)
+  // println(hiddenAwayCount.toDouble)
+  // println(boardAmount.toDouble)
+  // println(hiddenAwaySize.toDouble)
   probs
 }
 
