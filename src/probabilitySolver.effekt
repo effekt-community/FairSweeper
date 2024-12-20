@@ -48,13 +48,11 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
         mines = mines.copy
         mines.set(idx, true)
         mineAmt = mineAmt + 1
-      }
-      else {
+        valid = valid && mineAmt <= board.mines
+      } else {
         curBoard = curBoard.copy
         valid = curBoard.removeMove(xy)
       }
-      // count mines instead of always calc size when leak is fixed
-      valid = valid && mineAmt <= board.mines
       if (not(valid)) ctrl.break
     }
     if (valid && mineAmt >= minMines) {

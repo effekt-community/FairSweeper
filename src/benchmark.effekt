@@ -11,6 +11,7 @@ Beginner:
   23163.88ms 904/1000,
   22056.75ms 909/1000,
   20177.9ms 895/1000,
+  14616.72ms 894/1000,
 Intermediate:
   317517.43ms 748/1000,
   533331.9ms 777/1000,
@@ -26,10 +27,13 @@ Intermediate:
   190825.23ms 771/1000,
   206453.48ms 756/1000,
   125923.35ms 767/1000,
+  148905.1ms 770/1000,
+  125387.1ms 779/1000,
 Expert:
   80 Mines:
     1193586.77ms 670/1000,
-    1639243.59ms 670/1000
+    1639243.59ms 670/1000,
+    737876.58ms 662/1000,
 */
 def main() = {
   val games = 1000
@@ -41,9 +45,10 @@ def main() = {
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
-    // val init = timed{board = initializeBoard(rows,cols,mines)}
+    val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
-    val init = timed{board = intermediateBoard()}
+    // val init = timed{board = intermediateBoard()}
+    // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
