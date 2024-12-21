@@ -131,3 +131,4 @@ Two GitHub Actions are set up:
 
 ## Related
 - [JS Fairsweeper](https://github.com/pwmarcz/kaboom/tree/master)
+- [SAT SMT](https://smt.st/SAT_SMT_by_example.pdf)
