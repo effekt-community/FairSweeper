@@ -5,6 +5,8 @@ import src/utils
 import src/main
 import src/solver
 
+import bench
+
 effect QuantumMine(): Bool
 
 def getProbabilities(board: Board): List[(XY,Double)] = {
@@ -36,12 +38,14 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
+  var eachTime = 0
+  var ifTime = 0
   try {
     var curBoard = curBoard
     var mines = array(hiddenNearNumber.size, false)
     var valid = true
     var mineAmt = obvsMines.size
-    hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
+    eachTime = eachTime + timed{hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
       if (do QuantumMine()) {
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy)
@@ -54,18 +58,18 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
         valid = curBoard.removeMove(xy)
       }
       if (not(valid)) ctrl.break
-    }
-    if (valid && mineAmt >= minMines) {
+    }}
+    ifTime = ifTime + timed{if (valid && mineAmt >= minMines) {
       // println("-----------")
       // println(curBoard)
       foundBoards = foundBoards + 1
       val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
-      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt((board.mines - mineAmt))
+      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt(board.mines - mineAmt)
       mines.foreachIndex{ (idx,hasMine) =>
         if (hasMine) counts.set(idx, counts.get(idx) + bigInt(hiddenArrangements))
       }
-    }
+    }}
   } with QuantumMine {
     resume(false)
     resume(true)
@@ -82,6 +86,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   // println(hiddenAwayCount.toDouble)
   // println(boardAmount.toDouble)
   // println(hiddenAwaySize.toDouble)
+  println("Each Time: " ++ eachTime.formatMs ++ ", If Time: " ++ ifTime.formatMs)
   probs
 }
 
