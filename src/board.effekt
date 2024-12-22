@@ -1,4 +1,5 @@
 import tty
+import bench
 
 import src/utils
 
@@ -9,6 +10,7 @@ effect Won(board: Board): Unit
 
 // for resuming with each value with each()
 effect Offset(start: Int, end: Int): Int
+effect QuantumMine(): Bool
 
 record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 
@@ -86,19 +88,101 @@ def copy(board: Board): Board = {
   Board(newGrid, board.rows, board.cols, board.mines)
 }
 
-def revealCell(board: Board, xy: XY, first: Bool, safe: Bool): Unit / {GameOver, Won, Revealing} =
+def moveHiddenAwayMine(board: Board, xy: XY): Unit = {
+  val hiddenNoMine = board.getSafeHidden.collect{ xy2 =>
+    if (board.getRevealedNeighbors(xy2).size == 0) Some(xy2)
+    else None()
+  }.fromList
+  println(hiddenNoMine.size)
+  val target = hiddenNoMine.unsafeGet(randInt(0,hiddenNoMine.size))
+  board.setCell(target, board.getCell(target) match {
+    case Hidden(_,f) => Hidden(true,f)
+    case _ => <>
+  })
+  board.setCell(xy, Hidden(false,false))
+}
+
+def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
+  if (board.getRevealed.size > 0) do GameOver(board, xy)
+  moveHiddenAwayMine(board, xy)
+}
+
+def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
+  val revealedNeighbors = board.getRevealedNeighbors(xy)
+  if (revealedNeighbors.size > 0) {
+      var curBoard = board.copy
+      curBoard.hideHiddenInfo
+      val obvsMines = curBoard.revealObviousMines
+      val par = curBoard.getXY{
+        case SHidden() => true
+        case _ => false
+      }.partition{ xy =>
+        curBoard.getRevealedNeighbors(xy).size > 0
+      }
+      val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
+        curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
+      }
+      var found = false
+      val minMines = curBoard.mines - par.second.size
+      try {
+        var mines: List[Bool] = empty()
+        var valid = true
+        var mineAmt = obvsMines.size
+        hiddenNearNumber.foreachIndex{ (idx,xy2){ctrl} =>
+          if (do QuantumMine() && not(xy2 == xy)) {
+            curBoard = curBoard.copy
+            valid = curBoard.removeMine(xy2)
+            mines = mines.append([true])
+            mineAmt = mineAmt + 1
+            valid = valid && mineAmt <= board.mines
+          } else {
+            curBoard = curBoard.copy
+            valid = curBoard.removeMove(xy2)
+            mines = mines.append([false])
+          }
+          if (not(valid)) ctrl.break
+        }
+        if (valid && mineAmt >= minMines) {
+          found = true
+          hiddenNearNumber.zipWith(mines) { (xy2,hasMine) =>
+            board.getCell(xy2) match {
+              case Hidden(_,f) => board.setCell(xy2, Hidden(hasMine,f))
+              case _ => <>
+            }
+          }
+          ()
+        }
+      } with QuantumMine {
+        if (not(found)) resume(false)
+        if (not(found)) resume(true)
+      }
+  }
+  else moveHiddenAwayMine(board, xy)
+  board.setCell(xy, Hidden(false,false))
+}
+
+def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver, Won, Revealing} =
   board.getCell(xy) match {
     case Hidden(hasMine, _) =>
       if (first) do Revealing(xy)
-      if (hasMine) {
-        if (board.getRevealed.size > 0) do GameOver(board, xy)
-        val hiddenNoMine = board.getSafeHidden
-        with on[OutOfBounds].panic
-        board.setCell(hiddenNoMine.get(randInt(0,hiddenNoMine.size)), Hidden(true,false))
-        board.setCell(xy, Hidden(false,false))
-      }
+      if (fair) {
+        val movesAndMines = board.getProbabilities.getMovesAndMines
+        val moveInMoves = movesAndMines.first.any{ case xy2 => xy2 == xy }
+        val moveInMines = movesAndMines.second.any{ case xy2 => xy2 == xy }
+        if (not(moveInMoves || moveInMines)) {
+          if (movesAndMines.first.size > 0) do GameOver(board, xy)
+          if (hasMine) board.handleUnknownMine(xy)
+        } else if (hasMine) board.handleMine(xy)
+      } else if (hasMine) board.handleMine(xy)
+
       val adjMines = countAdjacentMines(board, xy)
-      board.setCell(xy, Revealed(adjMines))
+      board.setCell(xy, Revealed(adjMines, board.getHiddenNeighbors(xy).size))
+      board.getRevealedNeighbors(xy).foreach{ xy2 =>
+        board.getCell(xy2) match {
+          case Revealed(c,h) => board.setCell(xy2, Revealed(c, h - 1))
+          case _ => ()
+        }
+      }
       if (adjMines == 0) revealAdjacentCells(board, xy)
       val hidden = board.getXY{
         case Hidden(_,_) => true
@@ -112,7 +196,6 @@ def revealCellEffectless(board: Board, xy: XY): Unit / {} =
   with GameOver {(_,_) => println("Effectless reveal game over");<>}
   with Won {_ => ()}
   with Revealing {_ => resume(())}
-
 def revealAdjacentCells(board: Board, xy: XY): Unit =
   board.getNeighbors(xy).foreach{ xy => board.revealCellEffectless(xy) }
 
@@ -128,7 +211,7 @@ def flagCell(board: Board, xy: XY): Unit / {Flagging} = {
     case Hidden(hasMine, isFlagged) =>
       do Flagging(xy)
       board.setCell(xy, Hidden(hasMine, not(isFlagged)))
-    case Revealed(_) =>
+    case Revealed(_,_) =>
       println("Cannot flag a revealed cell!")
     case _ => <>
   }
@@ -153,14 +236,12 @@ def println(board: Board, showBombs: Bool): Unit = {
         case Hidden(_, true)                 => magenta("F")
         case Hidden(true, _) and showBombs   => red("✸")
         case Hidden(_, false)                => yellow("◼")
-        case Revealed(count) and (count > 0) => green(count.show)
-        case Revealed(_)                     => " "
+        case Revealed(c,_) and (c == 0)      => " "
+        case Revealed(c,h)                   => green(c.show)
         // for solver visualization
         case Mine()                          => red("M")
         case SHidden()                       => cyan("H")
         case Relevant()                      => magenta("R")
-        case SRevealed(c,_) and (c == 0)     => " "
-        case SRevealed(c,h)                  => green(c.show)
       }) ++ "|"
     }
   }
@@ -173,30 +254,7 @@ def hideHiddenInfo(board: Board): Unit =
   board.foreach{ (xy,cell) =>
     board.getCell(xy) match {
       case Hidden(_,_) => board.setCell(xy, SHidden())
-      case Revealed(c) => board.setCell(xy, SRevealed(c, getHiddenNeighbors(board, xy).size))
       case _ => ()
-    }
-  }
-
-def removeMine(board: Board, mine: XY): Bool = {
-  board.setCell(mine, Mine())
-  board.getNeighbors(mine).all{ xy =>
-    board.getCell(xy) match {
-      case SRevealed(count, hdnbs) =>
-        board.setCell(xy, SRevealed(count - 1, hdnbs - 1))
-        count > 0 && hdnbs >= count
-      case _ => true
-    }
-  }
-}
-
-def removeMove(board: Board, move: XY): Bool =
-  board.getNeighbors(move).all{ xy =>
-    board.getCell(xy) match {
-      case SRevealed(count, hdnbs) =>
-        board.setCell(xy, SRevealed(count, hdnbs - 1))
-        hdnbs - 1 >= count
-      case _ => true
     }
   }
 
@@ -204,8 +262,7 @@ def removeMove(board: Board, move: XY): Bool =
 def getRevealedNeighbors(board: Board, xy: XY): List[XY] =
   board.getNeighbors(xy).collect{ xy =>
     board.getCell(xy) match {
-      case Revealed(_) => Some(xy)
-      case SRevealed(_,_) => Some(xy)
+      case Revealed(_,_) => Some(xy)
       case _ => None()
     }
   }
@@ -219,11 +276,12 @@ def getHiddenNeighbors(board: Board, xy: XY): List[XY] =
     }
   }
 
-def getMines(board: Board): List[XY] =
-  board.getXY{
-    case Mine() => true
-    case Hidden(true,_) => true
-    case _ => false
+def getSafeHiddenNeighbors(board: Board, xy: XY): List[XY] =
+  board.getNeighbors(xy).collect{ xy =>
+    board.getCell(xy) match {
+      case Hidden(false,_) => Some(xy)
+      case _ => None()
+    }
   }
 
 def getSafeHidden(board: Board): List[XY] =
@@ -234,8 +292,7 @@ def getSafeHidden(board: Board): List[XY] =
 
 def getRevealed(board: Board): List[XY] =
   board.getXY{
-    case Revealed(_) => true
-      case SRevealed(_,_) => true
+    case Revealed(_,_) => true
     case _ => false
   }
 
@@ -261,3 +318,119 @@ def getNeighbors(board: Board, xy: XY): List[XY] =
     if (nx >= 0 && nx < board.cols && ny >= 0 && ny < board.rows) Some(XY(nx,ny))
     else None()
   }
+
+// ------------------------- SOLVER ------------------------
+def removeMine(board: Board, mine: XY): Bool = {
+  board.setCell(mine, Mine())
+  board.getNeighbors(mine).all{ xy =>
+    board.getCell(xy) match {
+      case Revealed(count, hdnbs) =>
+        board.setCell(xy, Revealed(count - 1, hdnbs - 1))
+        count > 0 && hdnbs >= count
+      case _ => true
+    }
+  }
+}
+
+def removeMove(board: Board, move: XY): Bool =
+  board.getNeighbors(move).all{ xy =>
+    board.getCell(xy) match {
+      case Revealed(count, hdnbs) =>
+        board.setCell(xy, Revealed(count, hdnbs - 1))
+        hdnbs - 1 >= count
+      case _ => true
+    }
+  }
+
+def getProbabilities(board: Board): List[(XY,Double)] = {
+  with on[OutOfBounds].panic
+  var curBoard = board.copy
+  curBoard.hideHiddenInfo
+  val obvsMines = curBoard.revealObviousMines
+  val numbers = curBoard.getRevealed
+  val hidden = curBoard.getXY{
+    case SHidden() => true
+    case _ => false
+  }
+  val par = hidden.partition{ xy =>
+    curBoard.getRevealedNeighbors(xy).size > 0
+  }
+  // sort by amount of revealed neighbors / information
+  val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
+    curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
+  }
+  val showBoard = curBoard.copy
+  hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
+  // println(board)
+  println(showBoard)
+  println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
+  val hiddenAway = par.second
+  val hiddenAwaySize = hiddenAway.size
+  val minMines = curBoard.mines - hiddenAwaySize
+  val counts = array(hiddenNearNumber.size, bigInt(0))
+  var hiddenAwayCount = bigInt(0)
+  var boardAmount = bigInt(0)
+  var foundBoards = 0
+  var eachTime = 0
+  var ifTime = 0
+  try {
+    var curBoard = curBoard
+    var mines = array(hiddenNearNumber.size, false)
+    var valid = true
+    var mineAmt = obvsMines.size
+    eachTime = eachTime + timed{hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
+      if (do QuantumMine()) {
+        curBoard = curBoard.copy
+        valid = curBoard.removeMine(xy)
+        mines = mines.copy
+        mines.set(idx, true)
+        mineAmt = mineAmt + 1
+        valid = valid && mineAmt <= board.mines
+      } else {
+        curBoard = curBoard.copy
+        valid = curBoard.removeMove(xy)
+      }
+      if (not(valid)) ctrl.break
+    }}
+    ifTime = ifTime + timed{if (valid && mineAmt >= minMines) {
+      // println("-----------")
+      // println(curBoard)
+      foundBoards = foundBoards + 1
+      val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
+      boardAmount = boardAmount + bigInt(hiddenArrangements)
+      hiddenAwayCount = hiddenAwayCount + bigInt(hiddenArrangements) * bigInt(board.mines - mineAmt)
+      mines.foreachIndex{ (idx,hasMine) =>
+        if (hasMine) counts.set(idx, counts.get(idx) + bigInt(hiddenArrangements))
+      }
+    }}
+  } with QuantumMine {
+    resume(false)
+    resume(true)
+  }
+  var probs = empty()
+  hiddenNearNumber.foreachIndex{ (idx,xy) =>
+    probs = probs.append([(xy,(counts.get(idx).toDouble/boardAmount.toDouble))])
+  }
+  val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
+  hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
+  println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
+  // println(awayProb)
+  // println(hiddenAwayCount.toDouble)
+  // println(boardAmount.toDouble)
+  // println(hiddenAwaySize.toDouble)
+  println("Each Time: " ++ eachTime.formatMs ++ ", If Time: " ++ ifTime.formatMs)
+  probs
+}
+
+def revealObviousMines(board: Board): List[XY] =
+  board.getRevealed.collect{ xy =>
+    board.getCell(xy) match {
+      case Revealed(c,_) =>
+        val hdnbs = board.getHiddenNeighbors(xy)
+        if (hdnbs.size == c)
+          Some(hdnbs.collect{xy2 => board.removeMine(xy2); Some(xy2)})
+        else None()
+      case _ => None()
+    }
+  }.flatMap{e => e}

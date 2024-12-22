@@ -4,7 +4,6 @@ import src/utils
 import src/board
 import src/boards
 import src/solver
-import src/probabilitySolver
 
 /* Stats first guess is always save (standard)
 Beginner:
@@ -52,10 +51,10 @@ def main() = {
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
-    val init = timed{board = initializeBoard(rows,cols,mines)}
+    // val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
     // val init = timed{board = intermediateBoard()}
-    // val init = timed{board = beginnerBoard()}
+    val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
@@ -73,7 +72,7 @@ def main() = {
             if (prob < move.second) move = (xy,prob)
           }
           if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
-          board.revealCell(move.first, true, true)
+          moves = [move.first]
           // println(board)
           println("Guessed: " ++ move.first.show)
         }

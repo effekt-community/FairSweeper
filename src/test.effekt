@@ -5,7 +5,6 @@ import src/utils
 import src/board
 import src/boards
 import src/solver
-import src/probabilitySolver
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
@@ -21,7 +20,7 @@ def testRevealCell() = {
   val board = simpleBoard1()
   board.revealCellEffectless(XY(0, 0))
   do assert(board.getCell(XY(0, 0)) match {
-    case Revealed(_) => true
+    case Revealed(_,_) => true
     case _           => false
   }, "Reveal failed")
 }
