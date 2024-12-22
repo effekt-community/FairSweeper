@@ -15,11 +15,13 @@ record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
 def getCell(board: Board, xy: XY): Cell = {
   with on[OutOfBounds].panic
   board.grid.get(xy.y).get(xy.x)
+  // board.grid.unsafeGet(xy.y).unsafeGet(xy.x)
 }
 
 def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
   with on[OutOfBounds].panic
   board.grid.get(xy.y).set(xy.x, new_val)
+  // board.grid.unsafeGet(xy.y).unsafeSet(xy.x, new_val)
 }
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
@@ -193,7 +195,7 @@ def removeMove(board: Board, move: XY): Bool =
     board.getCell(xy) match {
       case SRevealed(count, hdnbs) =>
         board.setCell(xy, SRevealed(count, hdnbs - 1))
-        count >= 0 && hdnbs - 1 >= count
+        hdnbs - 1 >= count
       case _ => true
     }
   }
