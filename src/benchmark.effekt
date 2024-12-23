@@ -48,12 +48,14 @@ def main() = {
   val mines = 80
   var board = initializeBoard(0, 0, 0)
 
+  var stop = false
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
     // val init = timed{board = intermediateBoard()}
+    if (not(stop)) {
     val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
@@ -76,12 +78,13 @@ def main() = {
           // println(board)
           println("Guessed: " ++ move.first.show)
         }
-        moves.foreach{ xy => board.revealCell(xy, true, true)}
+        moves.foreach{ xy => board.revealCell(xy, true, true) }
       }}
       with GameOver {(board,move) =>
         println("------- Lost ------")
         println(move.show)
         println(board, true)
+        stop = true
       }
       with Won {board =>
         println("------- Won -------")
@@ -92,6 +95,8 @@ def main() = {
     }
     println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
+
+    }
   }}
   println("Total time taken: " ++ total.formatMs)
   println(wins.show ++ "/" ++ games.show)
