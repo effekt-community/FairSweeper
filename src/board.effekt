@@ -97,13 +97,9 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
   var curBoard = board.copy
   curBoard.hideHiddenInfo
   val obvsMines = curBoard.revealObviousMines
-  val revealedNeighbors = curBoard.getRevealedNeighbors(xy)
   val hidden = curBoard.getXY{
     case SHidden() => true
     case _ => false
-  }
-  val par = hidden.partition{ xy =>
-    curBoard.getRevealedNeighbors(xy).size > 0
   }
   var found = false
   try {
@@ -124,8 +120,6 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
       }
       if (not(valid)) ctrl.break
     }
-    println(mines)
-    println(valid)
     if (valid && mineAmt == curBoard.mines) {
       found = true
       hidden.zipWith(mines) { (xy2,hasMine) =>
@@ -134,8 +128,6 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
           case _ => <>
         }
       }
-      println(mines)
-      println(hidden)
       board.setCell(xy, Hidden(false,false))
     }
   } with QuantumMine {
@@ -143,6 +135,7 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
     if (not(found)) resume(not(mine))
     if (not(found)) resume(mine)
   }
+  if (not(found)) do GameOver(board, xy)
 }
 
 def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver, Won, Revealing} =
