@@ -114,31 +114,37 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
   val trySequence = hidden.collect{ _ => Some(random() > mineDensity) }
   var found = false
   var oidx = 0
-  var mineA = 0
   try {
     var curBoard = curBoard
     var mines: List[Bool] = empty()
     var valid = true
     var mineAmt = obvsMines.size
     hidden.foreachIndex{ (idx,xy2){ctrl} =>
-      mineA = mineAmt
       oidx = idx
       if (not(xy2 == xy) && do QuantumMine()) {
+        oidx = idx
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy2)
         mines = mines.append([true])
         mineAmt = mineAmt + 1
         valid = valid && mineAmt <= board.mines
       } else {
+        oidx = idx
         curBoard = curBoard.copy
         valid = curBoard.removeMove(xy2)
         mines = mines.append([false])
       }
       valid = valid && (board.mines - mineAmt) <= (hidden.size - (idx + 1))
-      mineA = mineAmt
       if (not(valid)) ctrl.break
     }
-    println("valid")
+    println(valid)
+    hidden.zipWith(mines) { (xy2,hasMine) =>
+      board.getCell(xy2) match {
+        case Hidden(_,f) => board.setCell(xy2, Hidden(hasMine,f))
+        case _ => <>
+      }
+    }
+    // println(board, true)
     println(mineAmt.show ++ "/" ++ board.mines.show)
     if (valid && mineAmt == board.mines) {
       println(mines)
@@ -152,10 +158,6 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
       ()
     }
   } with QuantumMine {
-    // val m = random() > (board.mines - mineA).toDouble/(hidden.size.toDouble-oidx.toDouble)
-    // println(m)
-    // if (not(found)) resume(not(m))
-    // if (not(found)) resume(m)
     if (not(found)) resume(not(trySequence.get(oidx)))
     if (not(found)) resume(trySequence.get(oidx))
   }

@@ -56,9 +56,9 @@ def main() = {
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
-    val init = timed{board = intermediateBoard()}
-    // if (not(stop)) {
-    // val init = timed{board = beginnerBoard()}
+    // val init = timed{board = intermediateBoard()}
+    if (not(stop)) {
+    val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
@@ -82,7 +82,7 @@ def main() = {
           // println(board)
           println("Guessed: " ++ move.first.show)
         }
-        moves.foreach{ xy => board.revealCell(xy, true, false) }
+        moves.foreach{ xy => board.revealCell(xy, true, true) }
       }}
       with GameOver {(board,move) =>
         println("------- Lost ------")
@@ -100,7 +100,7 @@ def main() = {
     println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
 
-    // }
+    }
   }}
   println("Total time taken: " ++ total.formatMs)
   println(wins.show ++ "/" ++ games.show)
