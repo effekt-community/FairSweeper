@@ -13,6 +13,7 @@ Beginner:
   14616.72ms 894/1000
   16700.93ms 915/1000
   215783.44ms 5000/5000 fair
+  37221.20ms 1000/1000 fair reduced prints
 Intermediate:
   317517.43ms 748/1000
   533331.9ms 777/1000
@@ -57,11 +58,11 @@ def main() = {
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
-    val init = timed{board = intermediateBoard()}
-    // val init = timed{board = beginnerBoard()}
+    // val init = timed{board = intermediateBoard()}
+    val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
-        println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
+        // println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
         var moves: List[XY] = empty()
         if (combineSolver) moves = board.getMovesAndMines.first
         else {
@@ -78,7 +79,7 @@ def main() = {
           if (move.first == XY(-1,-1)) {println(board);println("Move calc problem");<>}
           moves = [move.first]
           // println(board)
-          println("Guessed: " ++ move.first.show)
+          // println("Guessed: " ++ move.first.show)
         }
         moves.foreach{ xy => board.revealCell(xy, true, true) }
       }}
@@ -95,6 +96,7 @@ def main() = {
       }
       with Revealing {_ => resume(())}
     }
+    println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
     println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
   }}
