@@ -90,7 +90,12 @@ def copy(board: Board): Board = {
 
 def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
   if (board.getRevealed.size > 0) do GameOver(board, xy)
-  moveMine(board, xy)
+  else {
+    val newLocations = board.getSafeHidden
+    val newLocation = newLocations.random
+    board.setCell(newLocation, Hidden(true, false))
+    board.setCell(xy, Hidden(false, false))
+  }
 }
 
 def moveMine(board: Board, xy: XY): Unit / {GameOver} = {

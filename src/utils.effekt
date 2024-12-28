@@ -6,6 +6,11 @@ extern type BigInt
 // inclusive lower exclusive upper, functionality tested
 def randInt(lower: Int, upper: Int): Int = lower + (random() * upper.toDouble).floor
 
+def random[A](list: List[A]): A = {
+  with on[OutOfBounds].panic
+  list.get(randInt(0, list.size))
+}
+
 // --------------------------- XY --------------------------------
 record XY(x: Int, y: Int)
 

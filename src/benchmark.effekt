@@ -11,6 +11,7 @@ Beginner:
   22056.75ms 909/1000
   20177.9ms 895/1000
   14616.72ms 894/1000
+  16700.93ms 915/1000
 Intermediate:
   317517.43ms 748/1000
   533331.9ms 777/1000
@@ -31,6 +32,7 @@ Intermediate:
   118760.94ms 775/1000
   121726.49ms 768/1000
   95749.83ms 776/1000 unsafe
+  124357.95ms 766/1000
 Expert:
   80 Mines:
     1193586.77ms 670/1000
@@ -54,9 +56,9 @@ def main() = {
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
-    // val init = timed{board = intermediateBoard()}
-    if (not(stop)) {
-    val init = timed{board = beginnerBoard()}
+    val init = timed{board = intermediateBoard()}
+    // if (not(stop)) {
+    // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         println("Game: " ++ game.show ++ ", Wins: " ++ wins.show)
@@ -80,7 +82,7 @@ def main() = {
           // println(board)
           println("Guessed: " ++ move.first.show)
         }
-        moves.foreach{ xy => board.revealCell(xy, true, true) }
+        moves.foreach{ xy => board.revealCell(xy, true, false) }
       }}
       with GameOver {(board,move) =>
         println("------- Lost ------")
@@ -98,7 +100,7 @@ def main() = {
     println("Initilization: " ++ init.formatMs)
     println("Solving: " ++ solving.formatMs)
 
-    }
+    // }
   }}
   println("Total time taken: " ++ total.formatMs)
   println(wins.show ++ "/" ++ games.show)
