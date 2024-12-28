@@ -360,9 +360,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
-  val showBoard = curBoard.copy
-  hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
-  // println(board)
+  // val showBoard = curBoard.copy
+  // hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
   // println(showBoard)
   // println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
@@ -421,7 +420,9 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   // println(hiddenAwayCount.toDouble)
   // println(boardAmount.toDouble)
   // println(hiddenAwaySize.toDouble)
-  println("Each Time: " ++ eachTime.formatMs ++ ", If Time: " ++ ifTime.formatMs)
+  // println("Each Time: " ++ eachTime.formatMs ++ ", If Time: " ++ ifTime.formatMs)
+  // probs.foreach{case (xy,prob) => if (prob == 0.0) curBoard.setCell(xy, Relevant())}
+  // println(curBoard)
   probs
 }
 

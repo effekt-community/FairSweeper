@@ -61,8 +61,8 @@ def getMovesAndMines(list: List[(XY,Double)]): (List[XY],List[XY]) = {
   var moves: List[XY] = empty()
   var mines: List[XY] = empty()
   list.foreach{ case(xy,prob) =>
-    if (prob >= 0.99) mines = mines.append([xy])
-    else if (prob <= 0.01) moves = moves.append([xy])
+    if (prob >= 1.0) mines = mines.append([xy])
+    else if (prob == 0.0) moves = moves.append([xy])
   }
   (moves,mines)
 }
