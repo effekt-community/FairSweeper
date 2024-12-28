@@ -44,7 +44,7 @@ Expert:
     5557422.96ms 402/1000
 */
 def main() = {
-  val games = 1000
+  val games = 5000
   val cols = 30
   val rows = 16
   val mines = 80
