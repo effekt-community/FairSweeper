@@ -90,23 +90,34 @@ def copy(board: Board): Board = {
 
 def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
   if (board.getRevealed.size > 0) do GameOver(board, xy)
-  handleUnknownMine(board, xy)
+  moveMine(board, xy)
 }
 
-def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
+def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
+  println(board,true)
+  with on[OutOfBounds].panic
   var curBoard = board.copy
   curBoard.hideHiddenInfo
   val obvsMines = curBoard.revealObviousMines
   val hidden = curBoard.getXY{
     case SHidden() => true
     case _ => false
+  }.sortBy{ (xy, xy2) =>
+    curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
+  val mineDensity = (board.mines - obvsMines.size).toDouble/(hidden.size.toDouble)
+  val trySequence = hidden.collect{ _ => Some(random() > mineDensity) }
   var found = false
+  var oidx = 0
+  var mineA = 0
   try {
+    var curBoard = curBoard
     var mines: List[Bool] = empty()
     var valid = true
     var mineAmt = obvsMines.size
     hidden.foreachIndex{ (idx,xy2){ctrl} =>
+      mineA = mineAmt
+      oidx = idx
       if (not(xy2 == xy) && do QuantumMine()) {
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy2)
@@ -118,9 +129,14 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
         valid = curBoard.removeMove(xy2)
         mines = mines.append([false])
       }
+      valid = valid && (board.mines - mineAmt) <= (hidden.size - (idx + 1))
+      mineA = mineAmt
       if (not(valid)) ctrl.break
     }
-    if (valid && mineAmt == curBoard.mines) {
+    println("valid")
+    println(mineAmt.show ++ "/" ++ board.mines.show)
+    if (valid && mineAmt == board.mines) {
+      println(mines)
       found = true
       hidden.zipWith(mines) { (xy2,hasMine) =>
         board.getCell(xy2) match {
@@ -128,12 +144,15 @@ def handleUnknownMine(board: Board, xy: XY): Unit / {GameOver} = {
           case _ => <>
         }
       }
-      board.setCell(xy, Hidden(false,false))
+      ()
     }
   } with QuantumMine {
-    val mine = randInt(0,2) == 1
-    if (not(found)) resume(not(mine))
-    if (not(found)) resume(mine)
+    // val m = random() > (board.mines - mineA).toDouble/(hidden.size.toDouble-oidx.toDouble)
+    // println(m)
+    // if (not(found)) resume(not(m))
+    // if (not(found)) resume(m)
+    if (not(found)) resume(not(trySequence.get(oidx)))
+    if (not(found)) resume(trySequence.get(oidx))
   }
   if (not(found)) do GameOver(board, xy)
 }
@@ -146,11 +165,14 @@ def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver,
         val movesAndMines = board.getProbabilities.getMovesAndMines
         val moveInMoves = movesAndMines.first.any{ case xy2 => xy2 == xy }
         val moveInMines = movesAndMines.second.any{ case xy2 => xy2 == xy }
+        println("Move in moves: " ++ moveInMoves.show ++ ", Move in mines: " ++ moveInMines.show ++ ", Moves: " ++ movesAndMines.first.size.show ++ ", Mines: " ++ movesAndMines.second.size.show)
+        println(movesAndMines.first)
+        println(movesAndMines.second)
         if (not(moveInMoves || moveInMines)) {
           if (movesAndMines.first.size > 0) do GameOver(board, xy)
+          println(movesAndMines.first)
           if (hasMine) {
-            println(board,true)
-            board.handleUnknownMine(xy)
+            board.moveMine(xy)
             println(board,true)}
         } else if (hasMine) board.handleMine(xy)
       } else if (hasMine) board.handleMine(xy)
@@ -353,6 +375,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   var eachTime = 0
   var ifTime = 0
   try {
+    // so the board backtracks resumes
     var curBoard = curBoard
     var mines = array(hiddenNearNumber.size, false)
     var valid = true
@@ -383,8 +406,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       }
     }}
   } with QuantumMine {
-    resume(false)
     resume(true)
+    resume(false)
   }
   var probs = empty()
   hiddenNearNumber.foreachIndex{ (idx,xy) =>
