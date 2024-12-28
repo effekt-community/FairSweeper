@@ -99,7 +99,6 @@ def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
 }
 
 def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
-  println(board,true)
   with on[OutOfBounds].panic
   var curBoard = board.copy
   curBoard.hideHiddenInfo
@@ -112,52 +111,28 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
   val mineDensity = (board.mines - obvsMines.size).toDouble/(hidden.size.toDouble)
-  val trySequence = hidden.collect{ _ => Some(random() < mineDensity) }
-  println(trySequence)
   var found = false
-  var oidx = 0
-  var removeMove = true
-  var removeMine = true
   try {
     var curBoard = curBoard
     var mines: List[Bool] = empty()
     var valid = true
     var mineAmt = obvsMines.size
     hidden.foreachIndex{ (idx,xy2){ctrl} =>
-      oidx = idx
-      removeMove = true
-      removeMine = true
       if (not(xy2 == xy) && do QuantumMine()) {
         mineAmt = mineAmt + 1
         valid = mineAmt <= board.mines
-        oidx = idx
         curBoard = curBoard.copy
-        removeMine = curBoard.removeMine(xy2)
-        valid = valid && removeMine
+        valid = valid && curBoard.removeMine(xy2)
         mines = mines.append([true])
       } else {
-        oidx = idx
         curBoard = curBoard.copy
-        removeMove = curBoard.removeMove(xy2)
-        valid = removeMove
+        valid = curBoard.removeMove(xy2)
         mines = mines.append([false])
       }
       valid = valid && (board.mines - mineAmt) <= (hidden.size - (idx + 1))
       if (not(valid)) ctrl.break
     }
-    println(oidx.show ++ " " ++ removeMine.show ++ " " ++ removeMove.show)
-    println((board.mines - mineAmt).show ++ "<=" ++ (hidden.size - (oidx + 1)).show)
-    println(valid)
-    // hidden.zipWith(mines) { (xy2,hasMine) =>
-    //   board.getCell(xy2) match {
-    //     case Hidden(_,f) => board.setCell(xy2, Hidden(hasMine,f))
-    //     case _ => <>
-    //   }
-    // }
-    // println(board, true)
-    println(mineAmt.show ++ "/" ++ board.mines.show)
     if (valid && mineAmt == board.mines) {
-      println(mines)
       found = true
       hidden.zipWith(mines) { (xy2,hasMine) =>
         board.getCell(xy2) match {
@@ -168,8 +143,9 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
       ()
     }
   } with QuantumMine {
-    if (not(found)) resume(trySequence.get(oidx))
-    if (not(found)) resume(not(trySequence.get(oidx)))
+    val mine = random() < mineDensity
+    if (not(found)) resume(mine)
+    if (not(found)) resume(not(mine))
   }
   if (not(found)) do GameOver(board, xy)
 }
@@ -178,19 +154,13 @@ def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver,
   board.getCell(xy) match {
     case Hidden(hasMine, _) =>
       if (first) do Revealing(xy)
-      if (fair) {
+      if (fair && board.getRevealed.size > 0) {
         val movesAndMines = board.getProbabilities.getMovesAndMines
         val moveInMoves = movesAndMines.first.any{ case xy2 => xy2 == xy }
         val moveInMines = movesAndMines.second.any{ case xy2 => xy2 == xy }
-        println("Move in moves: " ++ moveInMoves.show ++ ", Move in mines: " ++ moveInMines.show ++ ", Moves: " ++ movesAndMines.first.size.show ++ ", Mines: " ++ movesAndMines.second.size.show)
-        println(movesAndMines.first)
-        println(movesAndMines.second)
         if (not(moveInMoves || moveInMines)) {
           if (movesAndMines.first.size > 0) do GameOver(board, xy)
-          println(movesAndMines.first)
-          if (hasMine) {
-            board.moveMine(xy)
-            println(board,true)}
+          if (hasMine) board.moveMine(xy)
         } else if (hasMine) board.handleMine(xy)
       } else if (hasMine) board.handleMine(xy)
 
@@ -213,8 +183,8 @@ def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver,
 def revealCellEffectless(board: Board, xy: XY): Unit / {} =
   try {board.revealCell(xy,false,false)}
   with GameOver {(_,_) => println("Effectless reveal game over");<>}
-  with Won {_ => ()}
   with Revealing {_ => resume(())}
+  with Won {_ => ()}
 def revealAdjacentCells(board: Board, xy: XY): Unit =
   board.getNeighbors(xy).foreach{ xy => board.revealCellEffectless(xy) }
 
@@ -329,7 +299,7 @@ def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
   }
   list.reverse
 }
-val offsets = [(0,1),(1,0),(1,1),(0,-1),(-1,0),(-1,-1),(1,-1),(-1,1)]
+val offsets = [(0,1),(1,0),(0,-1),(-1,0),(1,-1),(-1,1),(1,1),(-1,-1)]
 def getNeighbors(board: Board, xy: XY): List[XY] =
   offsets.collect{case (dx,dy) =>
     val nx = xy.x + dx
@@ -432,7 +402,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
-  println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
+  // println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
   // println(awayProb)
   // println(hiddenAwayCount.toDouble)
   // println(boardAmount.toDouble)
