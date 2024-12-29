@@ -7,40 +7,21 @@ import src/solver
 
 /* Stats first guess is always save (standard)
 Beginner:
-  23163.88ms 904/1000
-  22056.75ms 909/1000
-  20177.9ms 895/1000
   14616.72ms 894/1000
   16700.93ms 915/1000
   215783.44ms 5000/5000 fair
-  37221.20ms 1000/1000 fair reduced prints
-  30773.55ms 1000/1000 fair reduced prints
-  159676.45ms 5000/5000 fair reduced prints
+  37221.20ms 1000/1000 fair
+  30773.55ms 1000/1000 fair
+  159676.45ms 5000/5000 fair
 Intermediate:
-  317517.43ms 748/1000
-  533331.9ms 777/1000
-  394376.76ms 769/1000
-  305567.46ms 747/1000
-  287577.1ms 778/1000
-  232938.19ms 760/1000
-  211058.37ms 784/1000
-  198956.59ms 750/1000
-  155906.0ms 776/1000
-  178144.50ms 754/1000
-  176999.11ms 771/1000
-  190825.23ms 771/1000
-  206453.48ms 756/1000
-  125923.35ms 767/1000
-  148905.1ms 770/1000
   125387.1ms 779/1000
   118760.94ms 775/1000
   121726.49ms 768/1000
   95749.83ms 776/1000 unsafe
   124357.95ms 766/1000
+  743676.84ms 1000/1000 fair
 Expert:
   80 Mines:
-    1193586.77ms 670/1000
-    1639243.59ms 670/1000
     737876.58ms 662/1000
     498444.62ms 698/1000 unsafe
   99 Mines:
@@ -58,9 +39,9 @@ def main() = {
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
-    // val init = timed{board = initializeBoard(rows,cols,mines)}
+    val init = timed{board = initializeBoard(rows,cols,mines)}
     // val init = timed{board = expertBoard()}
-    val init = timed{board = intermediateBoard()}
+    // val init = timed{board = intermediateBoard()}
     // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {

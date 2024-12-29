@@ -23,7 +23,7 @@
 
 ## Setup
 
-On Windows some characters won't show correctly in the CLI to fix this you can follow this [post](https://stackoverflow.com/questions/57131654/using-utf-8-encoding-chcp-65001-in-command-prompt-windows-powershell-window/57134096#57134096)
+On Windows some characters won't show correctly in the CLI to fix this you can follow this [post](https://stackoverflow.com/questions/57131654/using-utf-8-encoding-chcp-65001-in-command-prompt-windows-powershell-window/57134096#57134096) (does not work for my Win10 Laptop idk)
 
 ## Progress
 
