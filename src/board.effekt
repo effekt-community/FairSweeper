@@ -103,12 +103,20 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
   var curBoard = board.copy
   curBoard.hideHiddenInfo
   val obvsMines = curBoard.revealObviousMines
-  // TODO: shuffle hidden without neighbors
-  val hidden = curBoard.getXY{
+  val par = curBoard.getXY{
     case SHidden() => true
     case _ => false
-  }.sortBy{ (xy, xy2) =>
+  }.partition{ xy =>
+    curBoard.getRevealedNeighbors(xy).size > 0
+  }
+  var hidden = par.first.sortBy{ (xy, xy2) =>
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
+  }
+  var hiddenAway = par.second
+  hiddenAway.foreach{ _ =>
+    val idx = randInt(0, hiddenAway.size)
+    hidden = hidden.append([hiddenAway.get(idx)])
+    hiddenAway = hiddenAway.deleteAt(idx)
   }
   val mineDensity = (board.mines - obvsMines.size).toDouble/(hidden.size.toDouble)
   var found = false
@@ -366,7 +374,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     var mines = array(hiddenNearNumber.size, false)
     var valid = true
     var mineAmt = obvsMines.size
-    eachTime = eachTime + timed{hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
+    hiddenNearNumber.foreachIndex{ (idx,xy){ctrl} =>
       if (do QuantumMine()) {
         curBoard = curBoard.copy
         valid = curBoard.removeMine(xy)
@@ -379,10 +387,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
         valid = curBoard.removeMove(xy)
       }
       if (not(valid)) ctrl.break
-    }}
-    ifTime = ifTime + timed{if (valid && mineAmt >= minMines) {
-      // println("-----------")
-      // println(curBoard)
+    }
+    if (valid && mineAmt >= minMines) {
       foundBoards = foundBoards + 1
       val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
       boardAmount = boardAmount + bigInt(hiddenArrangements)
@@ -390,7 +396,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       mines.foreachIndex{ (idx,hasMine) =>
         if (hasMine) counts.set(idx, counts.get(idx) + bigInt(hiddenArrangements))
       }
-    }}
+    }
   } with QuantumMine {
     resume(true)
     resume(false)
