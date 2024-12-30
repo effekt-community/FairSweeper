@@ -98,7 +98,8 @@ def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
   }
 }
 
-def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
+def moveMine(board: Board, xy: XY) = moveMine(board, xy, true)
+def moveMine(board: Board, xy: XY, moveAway: Bool): Unit / {GameOver} = {
   with on[OutOfBounds].panic
   var curBoard = board.copy
   curBoard.hideHiddenInfo
@@ -126,7 +127,7 @@ def moveMine(board: Board, xy: XY): Unit / {GameOver} = {
     var valid = true
     var mineAmt = obvsMines.size
     hidden.foreachIndex{ (idx,xy2){ctrl} =>
-      if (not(xy2 == xy) && do QuantumMine()) {
+      if (if (moveAway) (not(xy2 == xy) && do QuantumMine()) else (xy2 == xy || do QuantumMine())) {
         mineAmt = mineAmt + 1
         valid = mineAmt <= board.mines
         curBoard = curBoard.copy
@@ -167,7 +168,10 @@ def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver,
         val moveInMoves = movesAndMines.first.any{ case xy2 => xy2 == xy }
         val moveInMines = movesAndMines.second.any{ case xy2 => xy2 == xy }
         if (not(moveInMoves || moveInMines)) {
-          if (movesAndMines.first.size > 0) do GameOver(board, xy)
+          if (movesAndMines.first.size > 0) {
+            board.moveMine(xy, false)
+            do GameOver(board, xy)
+          }
           if (hasMine) board.moveMine(xy)
         } else if (hasMine) board.handleMine(xy)
       } else if (hasMine) board.handleMine(xy)
