@@ -6,7 +6,7 @@
   - [Table of contents](#table-of-contents)
   - [Setup](#setup)
   - [Progress](#progress)
-    - [Week 4](#week-4)
+    - [Week 4/5 -31.12.2024](#week-45--31122024)
     - [Week 3](#week-3)
     - [Week 2](#week-2)
     - [Week 1](#week-1)
@@ -27,7 +27,7 @@ On Windows some characters won't show correctly in the CLI to fix this you can f
 
 ## Progress
 
-### Week 4
+### Week 4/5 -31.12.2024
 - See https://github.com/TheDying0fLight/FairSweeper/pull/34
 
 ### Week 3
