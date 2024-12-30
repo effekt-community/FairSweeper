@@ -31,7 +31,6 @@ def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
     println(Screen::clear())
     with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
     input.split(" ") match {
-      // todo xy must be largereq 0 and lesseq board.rows/cols
       case Cons("r", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) =>
         board.revealCell(XY(x.toInt, y.toInt), true, true)
       case Cons("f", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) =>
