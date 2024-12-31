@@ -82,13 +82,6 @@ def differenceBoard4() = {
   board
 }
 
-/* TODO
-1 B B ?
-? 5 B ?
-B B ? 1
-2 ? ? ?
-*/
-
 /*
 0 0 0
 1 1 1

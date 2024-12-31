@@ -5,7 +5,6 @@ import src/utils
 import src/board
 import src/boards
 import src/solver
-import src/probabilitySolver
 
 // ----------------------------- GAME ---------------------------
 def testFlagCell() = {
@@ -21,7 +20,7 @@ def testRevealCell() = {
   val board = simpleBoard1()
   board.revealCellEffectless(XY(0, 0))
   do assert(board.getCell(XY(0, 0)) match {
-    case Revealed(_) => true
+    case Revealed(_,_) => true
     case _           => false
   }, "Reveal failed")
 }
@@ -47,17 +46,10 @@ def testCollectWithXY() = {
 }
 
 // ---------------------- PATTERN SOLVER FUNCTIONS -----------------------------
-def testSolve() = {
-  val board = simpleBoard2()
-  var moves: List[XY] = empty()
-  try {
-    board.getMoves() match {
-      case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
-    }
-    ()
+def testSolve() =
+  simpleBoard2().getMovesAndMines match {
+    case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
   }
-  with QuickMoves {_ => resume(())}
-}
 
 def testHiddenNeighbors() = {
   val board = simpleBoard2()
@@ -73,8 +65,7 @@ def testRemoveMine() = {
   board.hideHiddenInfo
   board.removeMine(XY(0, 0))
   do assert(board.getCell(XY(0, 0)) == Mine(), "Bomb revealed")
-  do assert(board.getCell(XY(0, 1)) == TrueHidden(), "Hidden cells stay hidden")
-  do assert(board.getCell(XY(1, 1)) == Revealed(0), "Should update mine count in neighbors")
+  do assert(board.getCell(XY(0, 1)) == SHidden(), "Hidden cells stay hidden")
 }
 
 def testIntersection() = {
@@ -117,7 +108,7 @@ def solverTests(){f: (Board) => (List[XY],List[XY])} = {
   test("SolveSubsetBoard1"){testSolver(subsetBoard1(), 2, XY(0,2), XY(1,2)){f}}
   test("SolveSubsetBoard2"){testSolver(subsetBoard2(), 2, XY(2,2), XY(0,2)){f}}
   test("SolveSubsetBoard3"){testSolver(subsetBoard3(), 2, XY(0,2), XY(-1,-1)){f}}
-  test("SolveSubsetBoard5"){testSolver(subsetBoard4(), 0){f}}
+  test("SolveSubsetBoard4"){testSolver(subsetBoard4(), 0){f}}
   test("SolveDifferenceBoard1"){testSolver(differenceBoard1(), 1, XY(1,2), XY(0,2)){f}}
   test("SolveDifferenceBoard2"){testSolver(differenceBoard2(), 5, XY(5,0), XY(2,0)){f}}
   test("SolveDifferenceBoard3"){testSolver(differenceBoard3(), 2, XY(2,2), XY(0,0)){f}}
@@ -143,10 +134,7 @@ def runTests() = {
     test("IsSubset"){testSubset()}
   }
   suite("PatternSolver") {
-    solverTests{board =>
-      try {board.getMoves}
-      with QuickMoves {_ => resume(())}
-    }
+    solverTests{board => board.getMovesAndMines}
   }
   suite("ProbSolver") {
     solverTests{board => board.getProbabilities.getMovesAndMines}

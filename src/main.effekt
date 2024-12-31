@@ -6,13 +6,21 @@ import tty
 import src/board
 import src/utils
 
+type GameState {
+  Playing()
+  Menu()
+  SettingsMenu()
+}
+
+record Settings(rows: Int, cols: Int, mines: Int, safe: Bool)
+
 def main() = {
   var board = initializeBoard(4, 4, 3)
   println(Screen::clear())
 
   try {playGame(board)}
-  with GameOver {(_,_) => println("Game Over! You hit a mine.")}
-  with Won {_ => println("You WON!"); println(board)}
+  with GameOver {(_,_) => println("Game Over! You hit a mine."); println(board, true)}
+  with Won {_ => println("You WON!"); println(board, true)}
   with Revealing { xy =>
     println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
     resume(())
@@ -25,16 +33,21 @@ def main() = {
 }
 
 def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
+  var state = Playing()
   while (true) {
-    println(board)
-    val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
-    println(Screen::clear())
-    with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
-    input.split(" ") match {
-      // todo xy must be largereq 0 and lesseq board.rows/cols
-      case Cons("r", Cons(x, Cons(y, _))) => board.revealCell(XY(x.toInt, y.toInt), true)
-      case Cons("f", Cons(x, Cons(y, _))) => board.flagCell(XY(x.toInt, y.toInt))
-      case _ => println("Invalid input. Try again.")
+    state match {
+      case SettingsMenu() => <>
+      case Menu() => <>
+      case Playing() =>
+        println(board)
+        val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
+        println(Screen::clear())
+        with on[WrongFormat].default{println("Coordinates need to be integer. Try again")}
+        input.split(" ") match {
+          case Cons("r", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.revealCell(XY(x.toInt, y.toInt), true, true)
+          case Cons("f", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.flagCell(XY(x.toInt, y.toInt))
+          case _ => println("Invalid input. Try again. Coordinates may be out of bounds.")
+        }
     }
   }
 }
@@ -44,3 +57,7 @@ def askUser(prompt: String): String = {
   println(prompt)
   do readLine()
 }
+
+def isValid(board: Board, xy: XY): Bool =
+  if (xy is XY(x,y)) 0 <= x && x < board.cols && 0 <= y && y < board.cols
+  else false

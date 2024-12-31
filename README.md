@@ -4,7 +4,10 @@
 
 - [FairSweeper](#fairsweeper)
   - [Table of contents](#table-of-contents)
+  - [Setup](#setup)
   - [Progress](#progress)
+    - [Week 4/5 -31.12.2024](#week-45--31122024)
+    - [Week 3](#week-3)
     - [Week 2](#week-2)
     - [Week 1](#week-1)
   - [Useful commands](#useful-commands)
@@ -18,9 +21,13 @@
 
 ---
 
+## Setup
+
+On Windows some characters won't show correctly in the CLI to fix this you can follow this [post](https://stackoverflow.com/questions/57131654/using-utf-8-encoding-chcp-65001-in-command-prompt-windows-powershell-window/57134096#57134096) (does not work for my Win10 Laptop idk)
+
 ## Progress
 
-### Week 4
+### Week 4/5 -31.12.2024
 - See https://github.com/TheDying0fLight/FairSweeper/pull/34
 
 ### Week 3
