@@ -89,6 +89,7 @@ def copy(board: Board): Board = {
 }
 
 def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
+  with on[MissingValue].panic
   if (board.getRevealed.size > 0) do GameOver(board, xy)
   else {
     val newLocations = board.getSafeHidden
@@ -113,12 +114,7 @@ def moveMine(board: Board, xy: XY, moveAway: Bool): Unit / {GameOver} = {
   var hidden = par.first.sortBy{ (xy, xy2) =>
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
-  var hiddenAway = par.second
-  hiddenAway.foreach{ _ =>
-    val idx = randInt(0, hiddenAway.size)
-    hidden = hidden.append([hiddenAway.get(idx)])
-    hiddenAway = hiddenAway.deleteAt(idx)
-  }
+  hidden = hidden.append(par.second.shuffle)
   val mineDensity = (board.mines - obvsMines.size).toDouble/(hidden.size.toDouble)
   var found = false
   try {
