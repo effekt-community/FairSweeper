@@ -40,9 +40,9 @@ def main() = {
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    // val init = timed{board = expertBoard()}
+    val init = timed{board = expertBoard()}
     // val init = timed{board = intermediateBoard()}
-    val init = timed{board = beginnerBoard()}
+    // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         // println("Game: " ++ (game + 1).show ++ ", Wins: " ++ wins.show)
