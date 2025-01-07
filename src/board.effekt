@@ -28,10 +28,7 @@ def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
-  var grid: Array[Array[Cell]] = allocate(rows)
-  each(0,rows) {rw =>
-    grid.set(rw, array(cols, Hidden(false, false)))
-  }
+  var grid = array::build(rows){_ => array(cols, Hidden(false,false))}
   val board = Board(grid, rows, cols, mines.size())
   mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
   board
