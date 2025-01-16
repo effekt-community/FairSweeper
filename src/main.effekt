@@ -4,6 +4,7 @@ import io/console
 import tty
 
 import src/board
+import src/boards
 import src/utils
 
 type GameState {
@@ -12,27 +13,60 @@ type GameState {
   SettingsMenu()
 }
 
+effect Restart(): Unit
+effect Quit(): Unit
+
 record Settings(rows: Int, cols: Int, mines: Int, safe: Bool)
 
 def main() = {
   var board = initializeBoard(15, 15, 20)
   println(Screen::clear())
 
-  try {playGame(board)}
-  with GameOver {(_,_) => println("Game Over! You hit a mine."); println(board, true)}
-  with Won {_ => println("You WON!"); println(board, true)}
-  with Revealing { xy =>
-    println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
-    resume(())
+  def play(): Unit = {
+    try {
+      with Formatted::formatting
+      var difficulty = -1
+      while (difficulty == -1) {
+        with on[WrongFormat].default{println(red("Input needs to be a single integer (1-3)"))}
+        val input = askUser("Choose difficulty (1-3):\n1: beginner\n2: intermediate (default)\n3: expert")
+        difficulty = if (input == "") 2 else input.toInt
+        if (difficulty < 1 || difficulty > 3) do raise(WrongFormat(), "")
+      }
+      println(Screen::clear())
+      var fair = -1
+      while (fair == -1) {
+        with on[WrongFormat].default{println(red("Input needs to be a single integer (1-2)"))}
+        val input = askUser("Use fair mode (1-2):\n1: yes (default)\n2: no")
+        fair = if (input == "") 1 else input.toInt
+        if (difficulty < 1 || difficulty > 2) do raise(WrongFormat(), "")
+      }
+      println(Screen::clear())
+      board = difficulty match {
+        case 1 => beginnerBoard()
+        case 2 => intermediateBoard()
+        case 3 => expertBoard()
+        case _ => println("Difficulty not available");<>
+      }
+      playGame(board, if (fair == 1) true else false)
+    }
+    with GameOver {(_,_) => println("Game Over! You hit a mine."); println(board, true)}
+    with Won {_ => println("You WON!"); println(board, true)}
+    with Revealing { xy =>
+      println("Revealing cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
+      resume(())
+    }
+    with Flagging { xy =>
+      println("Flagging cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
+      resume(())
+    }
+    with Quit {()}
+    with Restart {play()}
   }
-  with Flagging { xy =>
-    println("Flagging cell at (" ++ show(xy.x) ++ ", " ++ show(xy.y) ++ ")")
-    resume(())
-  }
-  println("over")
+  play()
+  println("!Game stopped!")
 }
 
-def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
+def playGame(board: Board, fair: Bool): Unit / {Flagging, Revealing, Won, GameOver, Quit, Restart} = {
   with Formatted::formatting
   var state = Playing()
   while (true) {
@@ -41,12 +75,14 @@ def playGame(board: Board): Unit / {Flagging, Revealing, Won, GameOver} = {
       case Menu() => <>
       case Playing() =>
         println(board)
-        val input = askUser("Enter action (r x y to reveal, f x y to flag): ")
+        val input = askUser("Enter action ('r x y' to reveal, 'f x y' to flag, 'restart', 'quit'): ")
         println(Screen::clear())
         with on[WrongFormat].default{println(red("Coordinates need to be integer. Try again"))}
         input.split(" ") match {
-          case Cons("r", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.revealCell(XY(x.toInt, y.toInt), true, true)
+          case Cons("r", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.revealCell(XY(x.toInt, y.toInt), true, fair)
           case Cons("f", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.flagCell(XY(x.toInt, y.toInt))
+          case Cons("restart", Nil()) => do Restart()
+          case Cons("quit", Nil())    => do Quit()
           case _ => println(red("Invalid input. Try again. Coordinates may be out of bounds."))
         }
     }
