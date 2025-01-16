@@ -3,12 +3,25 @@ effect Return[A](v: A): Unit
 extern type BigInt
 
 // ------------------------ Other ------------------------------
-// inclusive lower exclusive upper, functionality tested
-def randInt(lower: Int, upper: Int): Int = lower + (random() * upper.toDouble).floor
+// including lower, excluding upper, functionality tested
+def randInt(lower: Int, upper: Int): Int = lower + (random() * (upper - lower).toDouble).floor
 
-def random[A](list: List[A]): A = {
+def random[A](l: List[A]): A / Exception[MissingValue] = {
   with on[OutOfBounds].panic
-  list.get(randInt(0, list.size))
+  if (l.isEmpty) do raise(MissingValue(), "Trying to get random element of empty list")
+  l.get(randInt(0, l.size))
+}
+
+def shuffle[A](l: List[A]): List[A] = {
+  with on[OutOfBounds].panic
+  var list = l
+  var shuffled: List[A] = empty()
+  list.foreach{_ =>
+    val idx = randInt(0, list.size)
+    shuffled = shuffled.append([list.get(idx)])
+    list = list.deleteAt(idx)
+  }
+  shuffled
 }
 
 // --------------------------- XY --------------------------------
