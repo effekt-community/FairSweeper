@@ -11,6 +11,8 @@
     - [Week 3](#week-3)
     - [Week 2](#week-2)
     - [Week 1](#week-1)
+  - [Development](#development)
+    - [FFI](#ffi)
   - [Useful commands](#useful-commands)
     - [Effekt commands](#effekt-commands)
     - [Nix-related commands](#nix-related-commands)
@@ -23,6 +25,10 @@
 ---
 
 ## Setup
+
+The game can be run by using the the VS _Effekt_ extension. You have to download the newest version of Effekt and click
+on the _Run_ button above the _main_ function in the _main.effekt_ file. The game will start in a terminal with
+instructions on how to play
 
 On Windows some characters won't show correctly in the CLI to fix this you can follow this [post](https://stackoverflow.com/questions/57131654/using-utf-8-encoding-chcp-65001-in-command-prompt-windows-powershell-window/57134096#57134096) (does not work for my Win10 Laptop idk)
 
@@ -48,6 +54,27 @@ On Windows some characters won't show correctly in the CLI to fix this you can f
 - reveal squares and propagate through field until bombs are nearby
 - working bombs
 - flag squares
+
+## Development
+
+All relevant files are contained in the _src_ folder.
+
+Core files:
+- _board_: The board and solver logic
+- _boards_: Boards for tests and difficulty presets
+- _main_: User interaction logic
+- _utils_: Some helper functions mainly used for board and solver logic
+
+The _benchmark.effekt_ file contains a function to test the speed of the solver and some statistics from previous tests.
+
+_test.effekt_ contains a few tests to test the correctness and speed of solvers
+
+In _solver.effekt_ is a unused and incomplete alternative to the currently used _getProbabilities_ function in _board.effekt_. There is a possibility to combine the two solver functions for more efficient solution finding.
+
+### FFI
+
+Currently only _BigInt_ with some related functions is implemented through FFI it is used when finding possible moves
+by finding all possible boards. It stores the amount of possible boards on which a mine is placed on relevant fields.
 
 ## Useful commands
 
