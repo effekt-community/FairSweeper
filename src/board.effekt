@@ -1,5 +1,4 @@
 import tty
-import bench
 
 import src/utils
 
@@ -339,6 +338,7 @@ def removeMove(board: Board, move: XY): Bool =
 def getProbabilities(board: Board): List[(XY,Double)] = {
   with on[OutOfBounds].panic
   var curBoard = board.copy
+  // println(curBoard)
   curBoard.hideHiddenInfo
   val obvsMines = curBoard.revealObviousMines
   val hidden = curBoard.getXY{
@@ -352,10 +352,10 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
-  // val showBoard = curBoard.copy
-  // hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
+  val showBoard = curBoard.copy
+  hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
   // println(showBoard)
-  // println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards: " ++ 2.0.pow(hiddenNearNumber.size).show)
+  // println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards (only R): " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
   val hiddenAwaySize = hiddenAway.size
   val minMines = curBoard.mines - hiddenAwaySize
@@ -363,8 +363,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
-  var eachTime = 0
-  var ifTime = 0
+  // brute forcing
   try {
     // so the board backtracks resumes
     var curBoard = curBoard
@@ -403,14 +402,13 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
     probs = probs.append([(xy,(counts.get(idx).toDouble/boardAmount.toDouble))])
   }
   val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
-  hiddenAway.foreach{ xy => probs = probs.append([(xy,awayProb)])}
+  hiddenAway.foreach{ xy => probs = probs.append([(xy, awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
-  // println("Found Boards: " ++ foundBoards.show ++ ", " ++ "Valid Boards: " ++ boardAmount.show)
-  // println(awayProb)
-  // println(hiddenAwayCount.toDouble)
-  // println(boardAmount.toDouble)
-  // println(hiddenAwaySize.toDouble)
-  // println("Each Time: " ++ eachTime.formatMs ++ ", If Time: " ++ ifTime.formatMs)
+  // println("-----------------------")
+  // println("Found boards: " ++ foundBoards.show ++ "\n" ++ "Possible valid boards: " ++ boardAmount.show)
+  // println("Hidden (not R) mines: " ++ hiddenAwayCount.show)
+  // println("Hidden (not R) fields: " ++ hiddenAwaySize.show)
+  // println("Away prob. ((hidden_mines)/(pos_boards*hidden_fields)): " ++ awayProb.show)
   // probs.foreach{case (xy,prob) => if (prob == 0.0) curBoard.setCell(xy, Relevant())}
   // println(curBoard)
   probs
