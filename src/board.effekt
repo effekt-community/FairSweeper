@@ -177,7 +177,7 @@ def revealCell(board: Board, xy: XY, first: Bool, fair: Bool): Unit / {GameOver,
         }
       }
       if (adjMines == 0) revealAdjacentCells(board, xy)
-      val hidden = board.getXY{
+      val hidden = board.getXY {
         case Hidden(_,_) => true
         case _ => false
       }
@@ -352,8 +352,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   val hiddenNearNumber = par.first.sortBy{ (xy, xy2) =>
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
-  val showBoard = curBoard.copy
-  hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
+  // val showBoard = curBoard.copy
+  // hiddenNearNumber.foreach{xy => showBoard.setCell(xy, Relevant())}
   // println(showBoard)
   // println("Relevant Fields: " ++ hiddenNearNumber.size.show ++ ", Possible Boards (only R): " ++ 2.0.pow(hiddenNearNumber.size).show)
   val hiddenAway = par.second
