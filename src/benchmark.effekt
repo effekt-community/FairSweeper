@@ -20,6 +20,7 @@ Intermediate:
   95749.83ms 776/1000 unsafe
   124357.95ms 766/1000
   743676.84ms 1000/1000 fair
+  265097.66ms 1000/1000 fair
 Expert:
   80 Mines:
     737876.58ms 662/1000
@@ -40,8 +41,8 @@ def main() = {
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    val init = timed{board = expertBoard()}
-    // val init = timed{board = intermediateBoard()}
+    // val init = timed{board = expertBoard()}
+    val init = timed{board = intermediateBoard()}
     // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {

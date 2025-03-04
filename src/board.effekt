@@ -11,23 +11,27 @@ effect Won(board: Board): Unit
 effect Offset(start: Int, end: Int): Int
 effect QuantumMine(): Bool
 
-record Board(grid: Array[Array[Cell]], rows: Int, cols: Int, mines: Int)
+record Board(grid: Array[Cell], rows: Int, cols: Int, mines: Int)
 
-def getCell(board: Board, xy: XY): Cell = {
+def getIndex(board: Board, xy: XY): Int = return xy.x + (xy.y * board.cols)
+
+def getCell(board: Board, xy: XY): Cell = board.getCell(board.getIndex(xy))
+def getCell(board: Board, idx: Int): Cell = {
   with on[OutOfBounds].panic
-  board.grid.get(xy.y).get(xy.x)
+  board.grid.get(idx)
   // board.grid.unsafeGet(xy.y).unsafeGet(xy.x)
 }
 
-def setCell(board: Board, xy: XY, new_val: Cell): Unit = {
+def setCell(board: Board, xy: XY, new_val: Cell): Unit = board.setCell(board.getIndex(xy), new_val)
+def setCell(board: Board, idx: Int, new_val: Cell): Unit = {
   with on[OutOfBounds].panic
-  board.grid.get(xy.y).set(xy.x, new_val)
+  board.grid.set(idx, new_val)
   // board.grid.unsafeGet(xy.y).unsafeSet(xy.x, new_val)
 }
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
-  var grid = array::build(rows){_ => array(cols, Hidden(false,false))}
+  var grid: Array[Cell] = array(rows*cols, Hidden(false, false))
   val board = Board(grid, rows, cols, mines.size())
   mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
   board
@@ -77,11 +81,7 @@ def collect[A](board: Board) {f: (XY, Cell) => Option[A]}: List[A] = {
 
 def copy(board: Board): Board = {
   with on[OutOfBounds].panic
-  var newGrid = board.grid.copy
-  newGrid.foreachIndex{ (index,row) =>
-    newGrid.set(index,row.copy)
-  }
-  Board(newGrid, board.rows, board.cols, board.mines)
+  Board(board.grid.copy, board.rows, board.cols, board.mines)
 }
 
 def handleMine(board: Board, xy: XY): Unit / {GameOver} = {
@@ -220,23 +220,23 @@ def println(board: Board, showBombs: Bool): Unit = {
   str = str ++ "*|"
   each(0, board.cols) {n => str = str ++ n.mod(10).show ++ "|"}
   with Formatted::formatting
-  foreach(board.grid) {row =>
-    str = str ++ "\n"
-    str = str ++ counter.mod(10).show ++ "|"
-    counter = counter + 1
-    foreach(row) {elem =>
-      str = str ++ (elem match {
-        case Hidden(_, true)                 => magenta("F")
-        case Hidden(true, _) and showBombs   => red("✸")
-        case Hidden(_, false)                => yellow("◼")
-        case Revealed(c,_) and (c == 0)      => " "
-        case Revealed(c,h)                   => green(c.show)
-        // for solver visualization
-        case Mine()                          => red("M")
-        case SHidden()                       => cyan("H")
-        case Relevant()                      => magenta("R")
-      }) ++ "|"
+  board.foreach {(xy, cell) =>
+    if (xy.y == 0) {
+      str = str ++ "\n"
+      str = str ++ counter.mod(10).show ++ "|"
+      counter = counter + 1
     }
+    str = str ++ (board.getCell(xy) match {
+      case Hidden(_, true)                 => magenta("F")
+      case Hidden(true, _) and showBombs   => red("✸")
+      case Hidden(_, false)                => yellow("◼")
+      case Revealed(c,_) and (c == 0)      => " "
+      case Revealed(c,h)                   => green(c.show)
+      // for solver visualization
+      case Mine()                          => red("M")
+      case SHidden()                       => cyan("H")
+      case Relevant()                      => magenta("R")
+    }) ++ "|"
   }
   println(str)
 }
@@ -363,6 +363,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   var hiddenAwayCount = bigInt(0)
   var boardAmount = bigInt(0)
   var foundBoards = 0
+  var branches = bigInt(0)
   // brute forcing
   try {
     // so the board backtracks resumes
@@ -384,6 +385,7 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
       }
       if (not(valid)) ctrl.break
     }
+    branches = branches + bigInt(1)
     if (valid && mineAmt >= minMines) {
       foundBoards = foundBoards + 1
       val hiddenArrangements = binApprox(hiddenAwaySize, board.mines - mineAmt).floor
@@ -405,7 +407,8 @@ def getProbabilities(board: Board): List[(XY,Double)] = {
   hiddenAway.foreach{ xy => probs = probs.append([(xy, awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
   // println("-----------------------")
-  // println("Found boards: " ++ foundBoards.show ++ "\n" ++ "Possible valid boards: " ++ boardAmount.show)
+  // println("Explored branches: " ++ branches.toInt.show ++ ", Found valid boards: " ++ foundBoards.show ++ "\n" ++
+  //         "Possible valid boards: " ++ boardAmount.show)
   // println("Hidden (not R) mines: " ++ hiddenAwayCount.show)
   // println("Hidden (not R) fields: " ++ hiddenAwaySize.show)
   // println("Away prob. ((hidden_mines)/(pos_boards*hidden_fields)): " ++ awayProb.show)
