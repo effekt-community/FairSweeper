@@ -6,6 +6,7 @@
   - [Table of contents](#table-of-contents)
   - [Setup](#setup)
   - [Progress](#progress)
+    - [Extra](#extra)
     - [Week 6/7 1.1.2025 - 16.1.2025](#week-67-112025---1612025)
     - [Week 4/5 -31.12.2024](#week-45--31122024)
     - [Week 3](#week-3)
@@ -33,6 +34,9 @@ instructions on how to play
 On Windows some characters won't show correctly in the CLI to fix this you can follow this [post](https://stackoverflow.com/questions/57131654/using-utf-8-encoding-chcp-65001-in-command-prompt-windows-powershell-window/57134096#57134096) (does not work for my Win10 Laptop idk)
 
 ## Progress
+
+### Extra
+- changed grid to 1-D array improving speed by up to 3x (4.3.2025)
 
 ### Week 6/7 1.1.2025 - 16.1.2025
 - See https://github.com/TheDying0fLight/FairSweeper/pull/38
