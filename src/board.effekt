@@ -220,13 +220,13 @@ def println(board: Board, showBombs: Bool): Unit = {
   str = str ++ "*|"
   each(0, board.cols) {n => str = str ++ n.mod(10).show ++ "|"}
   with Formatted::formatting
-  board.foreach {(xy, cell) =>
-    if (xy.y == 0) {
+  each(0, board.rows*board.cols) {idx =>
+    if (mod(idx,board.cols) == 0) {
       str = str ++ "\n"
       str = str ++ counter.mod(10).show ++ "|"
       counter = counter + 1
     }
-    str = str ++ (board.getCell(xy) match {
+    str = str ++ (board.getCell(idx) match {
       case Hidden(_, true)                 => magenta("F")
       case Hidden(true, _) and showBombs   => red("✸")
       case Hidden(_, false)                => yellow("◼")

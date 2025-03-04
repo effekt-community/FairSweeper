@@ -28,6 +28,7 @@ Expert:
   99 Mines:
     4537855.5ms 377/1000
     5557422.96ms 402/1000
+    1970991.24ms 349/1000 single array grid
 */
 def main() = {
   val games = 1000
@@ -36,13 +37,14 @@ def main() = {
   val mines = 80
   var board = initializeBoard(0, 0, 0)
 
+  var fair = false
   var stop = false
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    // val init = timed{board = expertBoard()}
-    val init = timed{board = intermediateBoard()}
+    val init = timed{board = expertBoard()}
+    // val init = timed{board = intermediateBoard()}
     // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
@@ -65,7 +67,7 @@ def main() = {
           // println(board)
           // println("Guessed: " ++ move.first.show)
         }
-        moves.foreach{ xy => board.revealCell(xy, true, true) }
+        moves.foreach{ xy => board.revealCell(xy, true, fair) }
       }}
       with GameOver {(board,move) =>
         println("------- Lost ------")
