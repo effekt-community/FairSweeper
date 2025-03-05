@@ -3,7 +3,6 @@ import bench
 import src/utils
 import src/board
 import src/boards
-import src/solver
 
 /* Stats first guess is always save (standard)
 Beginner:
@@ -13,6 +12,7 @@ Beginner:
   37221.20ms 1000/1000 fair
   30773.55ms 1000/1000 fair
   159676.45ms 5000/5000 fair
+  12203.90ms 1000/1000 fair dont run twice
 Intermediate:
   125387.1ms 779/1000
   118760.94ms 775/1000
@@ -21,6 +21,7 @@ Intermediate:
   124357.95ms 766/1000
   743676.84ms 1000/1000 fair
   265097.66ms 1000/1000 fair
+  335935.88ms 1000/1000 fair not twice
 Expert:
   80 Mines:
     737876.58ms 662/1000
@@ -29,6 +30,9 @@ Expert:
     4537855.5ms 377/1000
     5557422.96ms 402/1000
     1970991.24ms 349/1000 single array grid
+    23511846.92ms 1000/1000 fair
+    2615552.64ms 369/1000
+    925743.28ms 410/1000 not running calc twice (facepalm)
 */
 def main() = {
   val games = 1000
@@ -37,27 +41,22 @@ def main() = {
   val mines = 80
   var board = initializeBoard(0, 0, 0)
 
-  var fair = false
+  var fair = true
   var stop = false
   val combineSolver = false
   var wins = 0
   val total = timed{each(0, games) { game =>
     // val init = timed{board = initializeBoard(rows,cols,mines)}
-    val init = timed{board = expertBoard()}
-    // val init = timed{board = intermediateBoard()}
+    // val init = timed{board = expertBoard()}
+    val init = timed{board = intermediateBoard()}
     // val init = timed{board = beginnerBoard()}
     val solving = timed{
       try {while (true) {
         // println("Game: " ++ (game + 1).show ++ ", Wins: " ++ wins.show)
         var moves: List[XY] = empty()
-        if (combineSolver) moves = board.getMovesAndMines.first
-        else {
-          val probs = board.getProbabilities
-          moves = probs.getMovesAndMines.first
-        }
+        val probs = board.getProbabilities(true)
+        moves = probs.getMovesAndMines.first
         if (moves.size == 0) {
-          val probs = board.getProbabilities
-          moves = probs.getMovesAndMines.first
           var move = (XY(-1,-1),2.0)
           probs.foreach {case (xy,prob) =>
             if (prob < move.second) move = (xy,prob)
