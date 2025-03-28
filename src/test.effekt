@@ -46,7 +46,7 @@ def testCollectWithXY() = {
 
 // ---------------------- PATTERN SOLVER FUNCTIONS -----------------------------
 def testSolve() =
-  simpleBoard2().getMovesAndMines match {
+  simpleBoard2().getProbabilities.getMovesAndMines match {
     case (moves, _) => do assert(moves.size == 0, "Solver should return no moves")
   }
 
@@ -124,7 +124,7 @@ def runTests() = {
     test("RevealCell"){testRevealCell()}
     test("AdjacentMines"){testCountAdjacentMines()}
     test("CollectCells"){testCollectWithXY()}
-    }
+  }
   suite("PatternSolverFunctions") {
     test("UnrevealedNeighbors"){testHiddenNeighbors()}
     test("RemoveMine"){testRemoveMine()}
@@ -133,7 +133,7 @@ def runTests() = {
     test("IsSubset"){testSubset()}
   }
   suite("PatternSolver") {
-    solverTests{board => board.getMovesAndMines}
+    solverTests{board => board.getProbabilities.getMovesAndMines}
   }
   suite("ProbSolver") {
     solverTests{board => board.getProbabilities.getMovesAndMines}
