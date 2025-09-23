@@ -131,22 +131,22 @@ def set[A](dict: CellDict[A], key: XY, newV: A): CellDict[A] = {
 // ------------------------ BigInt ------------------------------
 def show(v: BigInt): String = v.toDouble.show
 
-extern pure def bigInt(num: Int): BigInt =  js "BigInt(${num})"
-extern pure def bigInt(num: Double): BigInt =  js "BigInt(${num})"
+extern def bigInt(num: Int) at {}: BigInt =  js "BigInt(${num})"
+extern def bigInt(num: Double) at {}: BigInt =  js "BigInt(${num})"
 
-extern pure def toInt(bigInt: BigInt): Int = js "Number(${bigInt})"
-extern pure def toDouble(bigInt: BigInt): Double = js "Number(${bigInt})"
+extern def toInt(bigInt: BigInt) at {}: Int = js "Number(${bigInt})"
+extern def toDouble(bigInt: BigInt) at {}: Double = js "Number(${bigInt})"
 
-extern pure def infixDiv(x: BigInt, y: BigInt): BigInt = js "(${x}/${y})"
-extern pure def infixMul(x: BigInt, y: BigInt): BigInt = js "(${x}*${y})"
-extern pure def infixAdd(x: BigInt, y: BigInt): BigInt = js "(${x}+${y})"
-extern pure def infixSub(x: BigInt, y: BigInt): BigInt = js "(${x}-${y})"
-extern pure def infixEq(x: BigInt, y: BigInt): BigInt = js "(${x}==${y})"
+extern def infixDiv(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}/${y})"
+extern def infixMul(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}*${y})"
+extern def infixAdd(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}+${y})"
+extern def infixSub(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}-${y})"
+extern def infixEq(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}==${y})"
 
-extern pure def pow(base: BigInt, exp: BigInt): BigInt = js "(${base}}**${exp})"
+extern def pow(base: BigInt, exp: BigInt) at {}: BigInt = js "(${base}}**${exp})"
 
 // https://www.npmjs.com/package/bigint-isqrt?activeTab=code
-extern pure def sqrt(bigInt: BigInt): BigInt = js "sqrt$js(${bigInt})"
+extern def sqrt(bigInt: BigInt) at {}: BigInt = js "sqrt$js(${bigInt})"
 extern js """
   function sqrt$js(value) {
     if (value < 2n) {
@@ -175,7 +175,7 @@ extern js """
 """
 
 // https://stackoverflow.com/questions/70382306/logarithm-of-a-bigint
-extern pure def log10(bigInt: BigInt): BigInt = js "log10$js(${bigInt})"
+extern def log10(bigInt: BigInt) at {}: BigInt = js "log10$js(${bigInt})"
 extern js """
   function log10$js(bigInt) {
     if (bigInt < 0) return NaN;
@@ -183,13 +183,13 @@ extern js """
     return BigInt(s.length + Math.log10("0." + s.substring(0, 15)))
   }
 """
-extern pure def log(bigInt: BigInt): BigInt = js "log10$js(${bigInt}) * Math.log(10)"
-extern pure def natlog(bigInt: BigInt): BigInt = js "log10$js(${bigInt}) / Math.log10(Math.E)"
-extern pure def exp(n: BigInt): BigInt = js "Math.exp(${n})"
+extern def log(bigInt: BigInt) at {}: BigInt = js "log10$js(${bigInt}) * Math.log(10)"
+extern def natlog(bigInt: BigInt) at {}: BigInt = js "log10$js(${bigInt}) / Math.log10(Math.E)"
+extern def exp(n: BigInt) at {}: BigInt = js "Math.exp(${n})"
 def binApprox(n: BigInt, k: BigInt): BigInt = (natlog(n) - natlog(n - k) - natlog(k)).exp
 
 // https://stackoverflow.com/questions/37679987/efficient-computation-of-n-choose-k-in-node-js
-extern pure def logApprox(n: Int): Int = js "${n} === 0 ? 0 : (${n} + .5) * Math.log(${n}) - ${n} + 0.9189385332046728 + 0.08333333333333333 / ${n} - 0.002777777777777778 * Math.pow(${n}, -3)"
-extern pure def exp(n: Int): Int = js "Math.exp(${n})"
-extern pure def exp(n: Int): Double = js "Math.exp(${n})"
+extern def logApprox(n: Int) at {}: Int = js "${n} === 0 ? 0 : (${n} + .5) * Math.log(${n}) - ${n} + 0.9189385332046728 + 0.08333333333333333 / ${n} - 0.002777777777777778 * Math.pow(${n}, -3)"
+extern def exp(n: Int) at {}: Int = js "Math.exp(${n})"
+extern def exp(n: Int) at {}: Double = js "Math.exp(${n})"
 def binApprox(n: Int, k: Int): Double = (logApprox(n) - logApprox(n - k) - logApprox(k)).exp
