@@ -61,7 +61,7 @@ def isSubset(subset: List[XY], set: List[XY]): Bool = {
 }
 
 def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
-  l1.collect{xy1 =>
+  l1.collectSome {xy1 =>
     if (l2.any{xy2 => xy2 == xy1}) Some(xy1)
     else None()
   }
@@ -69,7 +69,7 @@ def getIntersection(l1: List[XY], l2: List[XY]): List[XY] = {
 
 def getDifference(list: List[XY], without: List[XY]): List[XY] = {
   val intersection = list.getIntersection(without)
-  list.collect{xyl =>
+  list.collectSome {xyl =>
     if (not(intersection.any{xyi => xyi == xyl})) Some(xyl)
     else None()
   }

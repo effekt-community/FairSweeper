@@ -193,7 +193,7 @@ def revealAdjacentCells(board: Board, xy: XY): Unit =
   board.getNeighbors(xy).foreach{ xy => board.revealCellEffectless(xy) }
 
 def countAdjacentMines(board: Board, xy: XY): Int =
-  board.getNeighbors(xy).collect{cel =>
+  board.getNeighbors(xy).collectSome {cel =>
     if (board.getCell(cel) is Hidden(true, _)) Some(xy)
     else None()
   }.size
@@ -253,7 +253,7 @@ def hideHiddenInfo(board: Board): Unit =
 
 // ------------------------- GETTER ------------------------
 def getRevealedNeighbors(board: Board, xy: XY): List[XY] =
-  board.getNeighbors(xy).collect{ xy =>
+  board.getNeighbors(xy).collectSome{ xy =>
     board.getCell(xy) match {
       case Revealed(_,_) => Some(xy)
       case _ => None()
@@ -261,7 +261,7 @@ def getRevealedNeighbors(board: Board, xy: XY): List[XY] =
   }
 
 def getHiddenNeighbors(board: Board, xy: XY): List[XY] =
-  board.getNeighbors(xy).collect{ xy =>
+  board.getNeighbors(xy).collectSome{ xy =>
     board.getCell(xy) match {
       case Hidden(_,_) => Some(xy)
       case SHidden() => Some(xy)
@@ -270,7 +270,7 @@ def getHiddenNeighbors(board: Board, xy: XY): List[XY] =
   }
 
 def getSafeHiddenNeighbors(board: Board, xy: XY): List[XY] =
-  board.getNeighbors(xy).collect{ xy =>
+  board.getNeighbors(xy).collectSome{ xy =>
     board.getCell(xy) match {
       case Hidden(false,_) => Some(xy)
       case _ => None()
@@ -305,7 +305,7 @@ def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
 }
 val offsets = [(0,1),(1,0),(0,-1),(-1,0),(1,-1),(-1,1),(1,1),(-1,-1)]
 def getNeighbors(board: Board, xy: XY): List[XY] =
-  offsets.collect{case (dx,dy) =>
+  offsets.collectSome{case (dx,dy) =>
     val nx = xy.x + dx
     val ny = xy.y + dy
     if (nx >= 0 && nx < board.cols && ny >= 0 && ny < board.rows) Some(XY(nx,ny))
@@ -428,12 +428,12 @@ def getProbabilities(board: Board, usePatterns: Bool): List[(XY,Double)] = {
 }
 
 def revealObviousMines(board: Board): List[XY] =
-  board.getRevealed.collect{ xy =>
+  board.getRevealed.collectSome { xy =>
     board.getCell(xy) match {
       case Revealed(c,_) =>
         val hdnbs = board.getHiddenNeighbors(xy)
         if (hdnbs.size == c)
-          Some(hdnbs.collect{xy2 => board.removeMine(xy2); Some(xy2)})
+          Some(hdnbs.collectSome {xy2 => board.removeMine(xy2); Some(xy2)})
         else None()
       case _ => None()
     }
@@ -461,7 +461,7 @@ def getMovesAndMinesByPattern(board: Board, foundMoves: List[XY], foundMines: Li
     board.removeMines(mines)
   }
   def updateNumbers() =
-    numbers = numbers.collect{ xy =>
+    numbers = numbers.collectSome { xy =>
       val count = if (board.getCell(xy) is Revealed(c,_)) c else <>
       count match {
         case 0 =>
@@ -542,7 +542,7 @@ def checkByHiddenNeighbors(board: Board, xy: XY, subset: Bool)
                           {f: ((List[XY], Int), (List[XY], Int)) => List[XY]}: List[XY] = {
   with on[OutOfBounds].panic
   val count = if (board.getCell(xy) is Revealed(c,_)) c else <>
-  val nbs = board.getNeighbors(xy, 2).collect{ xy =>
+  val nbs = board.getNeighbors(xy, 2).collectSome { xy =>
     board.getCell(xy) match {
       case Revealed(_,_) => Some(xy)
       case _ => None()
