@@ -27,18 +27,18 @@ def main() = {
       with Formatted::formatting
       var difficulty = -1
       while (difficulty == -1) {
-        with on[WrongFormat].default{println(red("Input needs to be a single integer (1-3)"))}
+        with crash(red("Input needs to be a single integer (1-3)"))
         val input = askUser("Choose difficulty (1-3):\n1: beginner\n2: intermediate (default)\n3: expert")
         difficulty = if (input == "") 2 else input.toInt
-        if (difficulty < 1 || difficulty > 3) do raise(WrongFormat(), "")
+        if (difficulty < 1 || difficulty > 3) do fail()
       }
       println(Screen::clear())
       var fair = -1
       while (fair == -1) {
-        with on[WrongFormat].default{println(red("Input needs to be a single integer (1-2)"))}
+        with crash("Input needs to be a single integer (1-2)")
         val input = askUser("Use fair mode (1-2):\n1: yes (default)\n2: no")
         fair = if (input == "") 1 else input.toInt
-        if (difficulty < 1 || difficulty > 2) do raise(WrongFormat(), "")
+        if (difficulty < 1 || difficulty > 2) do fail()
       }
       println(Screen::clear())
       board = difficulty match {
@@ -77,7 +77,7 @@ def playGame(board: Board, fair: Bool): Unit / {Flagging, Revealing, Won, GameOv
         println(board)
         val input = askUser("Enter action ('r x y' to reveal, 'f x y' to flag, 'restart', 'quit'): ")
         println(Screen::clear())
-        with on[WrongFormat].default{println(red("Coordinates need to be integer. Try again"))}
+        with crash(red("Coordinates need to be integer. Try again"))
         input.split(" ") match {
           case Cons("r", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.revealCell(XY(x.toInt, y.toInt), true, fair)
           case Cons("f", Cons(x, Cons(y, _))) and board.isValid(XY(x.toInt,y.toInt)) => board.flagCell(XY(x.toInt, y.toInt))

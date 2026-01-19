@@ -31,7 +31,7 @@ def setCell(board: Board, idx: Int, new_val: Cell): Unit = {
 
 def buildBoard(rows: Int, cols: Int, mines: List[XY]): Board = {
   with on[OutOfBounds].panic
-  var grid: Array[Cell] = array(rows*cols, Hidden(false, false))
+  var grid: Array[Cell] = array(rows * cols, Hidden(false, false))
   val board = Board(grid, rows, cols, mines.size())
   mines.foreach{cell => board.setCell(cell, Hidden(true, false))}
   board
@@ -111,7 +111,7 @@ def moveMine(board: Board, xy: XY, moveAway: Bool): Unit / {GameOver} = {
     curBoard.getRevealedNeighbors(xy).size > curBoard.getRevealedNeighbors(xy2).size
   }
   hidden = hidden.append(par.second.shuffle)
-  val mineDensity = (board.mines - obvsMines.size).toDouble/(hidden.size.toDouble)
+  val mineDensity = (board.mines - obvsMines.size).toDouble / (hidden.size.toDouble)
   var found = false
   try {
     var curBoard = curBoard
@@ -220,7 +220,7 @@ def println(board: Board, showBombs: Bool): Unit = {
   str = str ++ "*|"
   each(0, board.cols) {n => str = str ++ n.mod(10).show ++ "|"}
   with Formatted::formatting
-  each(0, board.rows*board.cols) {idx =>
+  each(0, board.rows * board.cols) {idx =>
     if (mod(idx,board.cols) == 0) {
       str = str ++ "\n"
       str = str ++ counter.mod(10).show ++ "|"
