@@ -44,7 +44,7 @@ def infixEq(left: List[XY], right: List[XY]): Bool = {
 
 def removeDuplicates(list: List[XY]) =
   list.foldRight(Nil()){(nw,acc) =>
-    if (acc.any{old => equals(nw, old)}) acc
+    if (acc.any{old => nw == old}) acc
     else acc.append(Cons(nw,Nil()))
   }
 
@@ -137,10 +137,10 @@ extern def bigInt(num: Double) at {}: BigInt =  js "BigInt(${num})"
 extern def toInt(bigInt: BigInt) at {}: Int = js "Number(${bigInt})"
 extern def toDouble(bigInt: BigInt) at {}: Double = js "Number(${bigInt})"
 
-extern def infixDiv(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}/${y})"
-extern def infixMul(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}*${y})"
-extern def infixAdd(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}+${y})"
-extern def infixSub(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}-${y})"
+extern def infixSlash(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}/${y})"
+extern def infixStar(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}*${y})"
+extern def infixPlus(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}+${y})"
+extern def infixMinus(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}-${y})"
 extern def infixEq(x: BigInt, y: BigInt) at {}: BigInt = js "(${x}==${y})"
 
 extern def pow(base: BigInt, exp: BigInt) at {}: BigInt = js "(${base}}**${exp})"

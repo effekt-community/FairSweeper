@@ -296,7 +296,7 @@ def getNeighbors(board: Board, xy: XY, size: Int): List[XY] = {
     val dc = do Offset(0 - size, size + 1)
     val nr = xy.y + dr
     val nc = xy.x + dc
-    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(equals((dc,dr),(0,0))))
+    if ((nr >= 0 && nr < board.rows && nc >= 0 && nc < board.cols) and not(dc == 0 && dr == 0))
       list = Cons(XY(nc,nr),list)
   } with Offset {(s,e) =>
     each(s,e){v => resume(v)}
@@ -411,9 +411,9 @@ def getProbabilities(board: Board, usePatterns: Bool): List[(XY,Double)] = {
   }
   var probs = empty()
   hiddenNearNumber.foreachIndex{ (idx,xy) =>
-    probs = probs.append([(xy,(counts.get(idx).toDouble/boardAmount.toDouble))])
+    probs = probs.append([(xy,(counts.get(idx).toDouble / boardAmount.toDouble))])
   }
-  val awayProb = (hiddenAwayCount.toDouble/boardAmount.toDouble)/hiddenAwaySize.toDouble
+  val awayProb = (hiddenAwayCount.toDouble / boardAmount.toDouble) / hiddenAwaySize.toDouble
   hiddenAway.foreach{ xy => probs = probs.append([(xy, awayProb)])}
   obvsMines.foreach{ xy => probs = probs.append([(xy, 1.0)])}
   // println("-----------------------")
@@ -421,7 +421,7 @@ def getProbabilities(board: Board, usePatterns: Bool): List[(XY,Double)] = {
   //         "Possible valid boards: " ++ boardAmount.show)
   // println("Hidden (not R) mines: " ++ hiddenAwayCount.show)
   // println("Hidden (not R) fields: " ++ hiddenAwaySize.show)
-  // println("Away prob. ((hidden_mines)/(pos_boards*hidden_fields)): " ++ awayProb.show)
+  // println("Away prob. ((hidden_mines) / (pos_boards*hidden_fields)): " ++ awayProb.show)
   // probs.foreach{case (xy,prob) => if (prob == 0.0) curBoard.setCell(xy, Relevant())}
   // println(curBoard)
   probs
