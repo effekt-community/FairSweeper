@@ -10,9 +10,9 @@ def testFlagCell() = {
   val board = simpleBoard1()
   val xy = XY(2,3)
   board.flagCellEffectless(xy)
-  do assert(equals(board.getCell(xy), Hidden(false,true)), "Flagging failed")
+  do assert(board.getCell(xy) == Hidden(false,true), "Flagging failed")
   board.flagCellEffectless(xy)
-  do assert(equals(board.getCell(xy), Hidden(false,false)), "Removing flag failed")
+  do assert(board.getCell(xy) == Hidden(false,false), "Removing flag failed")
 }
 
 def testRevealCell() = {
